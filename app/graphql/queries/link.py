@@ -1,7 +1,5 @@
-from re import U
 from typing import Optional, Sequence
 from sqlalchemy.exc import SQLAlchemyError
-from uuid import UUID
 import strawberry
 from app.database import get_db
 from app.models.link import Link

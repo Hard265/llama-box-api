@@ -23,7 +23,7 @@ class FileMutations:
     @strawberry.mutation
     async def create(
         self, 
-        info, 
+        _, 
         file: Upload, 
         name: Optional[str] = None
     ) -> FileType:
@@ -61,7 +61,7 @@ class FileMutations:
     @strawberry.mutation
     def delete(
         self, 
-        info: strawberry.Info, 
+        _: strawberry.Info, 
         id: UUID,
     ) -> DeleteResponse:
         db = next(get_db())

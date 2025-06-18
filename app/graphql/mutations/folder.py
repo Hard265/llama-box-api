@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models.folder import Folder
 from app.schemas.folders import FolderCreate, FolderUpdate
 from app.graphql.types import FolderCreationInput, FolderType, FolderUpdateInput, DeleteResponse
+from app.models.permission import FolderPermission
 
 
 @strawberry.type
@@ -28,6 +29,7 @@ class FolderMutations:
             )
             db.add(folder)
             db.commit()
+            # permission = FolderPermission()
             db.refresh(folder)
             return folder
         except SQLAlchemyError:
@@ -62,7 +64,7 @@ class FolderMutations:
     @strawberry.mutation
     def delete(
         self, 
-        info: strawberry.Info, 
+        _: strawberry.Info, 
         id: UUID,
     ) -> DeleteResponse:
         db = next(get_db())
