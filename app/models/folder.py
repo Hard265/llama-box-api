@@ -13,6 +13,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from app.database import Base
 from app.models.permission import RoleEnum
+from app.models.user import User
 
 
 class Folder(Base):
@@ -50,8 +51,8 @@ class Folder(Base):
     parent = relationship("Folder", remote_side=[id], backref="folders")
 
     @property
-    def owner(self) -> Optional[str]:
+    def owner(self) -> Optional[User]:
         return next(
-            (perm.user_id for perm in self.permissions if perm.role == RoleEnum.viewer),
+            (perm.user for perm in self.permissions if perm.role == RoleEnum.viewer),
             None,
         )

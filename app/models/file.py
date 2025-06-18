@@ -14,6 +14,7 @@ from sqlalchemy import (
 )
 from typing import Optional
 from app.models.permission import RoleEnum
+from app.models.user import User
 
 
 class File(Base):
@@ -50,8 +51,8 @@ class File(Base):
     )
 
     @property
-    def owner(self) -> Optional[str]:
+    def owner(self) -> Optional[User]:
         return next(
-            (perm.user_id for perm in self.permissions if perm.role == RoleEnum.viewer),
+            (perm.user for perm in self.permissions if perm.role == RoleEnum.viewer),
             None,
         )
