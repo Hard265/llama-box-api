@@ -8,7 +8,7 @@ from app.graphql.mutations.link import LinkMutations
 from app.graphql.queries.file import FileQueries
 from app.graphql.queries.folder import FolderQueries
 from app.graphql.queries.link import LinkQueries
-from app.graphql.queries.permission import FilePermissionQueries
+from app.graphql.queries.permission import FilePermissionQueries, FolderPermissionQueries
 
 
 @strawberry.type
@@ -28,6 +28,10 @@ class Query:
     @strawberry.field
     def file_permission(self) -> FilePermissionQueries:
         return FilePermissionQueries()
+
+    @strawberry.field
+    def folder_permission(self) -> FolderPermissionQueries:
+        return FolderPermissionQueries()
 
 
 @strawberry.type
