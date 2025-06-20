@@ -1,9 +1,16 @@
 from __future__ import annotations
 from datetime import datetime
 import enum
+from typing import List, Optional
 from uuid import UUID
+
 import strawberry
-from typing import Optional, List
+
+
+@strawberry.type
+class UserType:
+    id: UUID
+    email: str
 
 
 @strawberry.type
@@ -59,17 +66,19 @@ class Role(str, enum.Enum):
 @strawberry.type
 class FilePermissionType:
     id: UUID
-    user_sub: str
+    user_id: str
     file: FileType
     role: Role
+    user: UserType
 
 
 @strawberry.type
 class FolderPermissionType:
     id: UUID
-    user_sub: str
-    file: FolderType
+    user_id: str
+    folder: FolderType
     role: Role
+    user: UserType
 
 
 @strawberry.input
