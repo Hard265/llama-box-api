@@ -3,8 +3,9 @@ from typing import Dict, Optional
 from jose import jwt, JWTError
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.security.utils import get_authorization_scheme_param
 from dotenv import load_dotenv
 
 from app.schemas.auth import TokenData
@@ -34,7 +35,7 @@ def create_access_token(data: Dict[str, str | datetime]):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) # type: ignore
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # type: ignore
     return encoded_jwt
 
 
@@ -45,11 +46,34 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
-        email: Optional[str] = payload.get("email")
-        if email is None:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # type: ignore
+        sub: Optional[str] = payload.get("sub")
+        if sub is None:
             raise credential_exception
-        token_data = TokenData(email=email)
+        token_data = TokenData(sub=sub)
     except JWTError:
+        raise credential_exception
+    return token_data
+
+
+def get_current_user_from_request(request: Request) -> TokenData:
+    credential_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise credential_exception
+    scheme, token = get_authorization_scheme_param(auth_header)
+    if not scheme or not token or scheme.lower() != "bearer":
+        raise credential_exception
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # type: ignore
+        sub: Optional[str] = payload.get("sub")
+        if sub is None:
+            raise credential_exception
+        token_data = TokenData(sub=sub)
+    except JWTError as e:
         raise credential_exception
     return token_data

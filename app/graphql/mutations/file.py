@@ -1,7 +1,7 @@
 import os
 import aiofiles
 import magic
-from pathlib  import Path
+from pathlib import Path
 from uuid import UUID, uuid4
 from sqlalchemy.exc import SQLAlchemyError
 import strawberry
@@ -17,16 +17,12 @@ from app.graphql.types import FileType, DeleteResponse
 MEDIA_ROOT = "media"
 os.makedirs(MEDIA_ROOT, exist_ok=True)
 
+
 @strawberry.type
 class FileMutations:
 
     @strawberry.mutation
-    async def create(
-        self, 
-        _, 
-        file: Upload, 
-        name: Optional[str] = None
-    ) -> FileType:
+    async def create(self, info, file: Upload, name: Optional[str] = None) -> FileType:
 
         filename_uuid = f"{uuid4()}_{file.filename}"
         file_path = os.path.join(MEDIA_ROOT, filename_uuid)
@@ -48,7 +44,7 @@ class FileMutations:
                 file=file_path,
                 mime_type=mime_type,
                 size=file.size,
-                ext = extension
+                ext=extension,
             )
             db.add(file_instance)
             db.commit()
@@ -60,15 +56,17 @@ class FileMutations:
 
     @strawberry.mutation
     def delete(
-        self, 
-        _: strawberry.Info, 
+        self,
+        _: strawberry.Info,
         id: UUID,
     ) -> DeleteResponse:
         db = next(get_db())
         try:
             file_obj = db.query(File).get(id)
             if not file_obj:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+                )
 
             if os.path.exists(file_obj.file):
                 os.remove(file_obj.file)
@@ -79,4 +77,3 @@ class FileMutations:
         except SQLAlchemyError:
             db.rollback()
             raise Exception("Internal server error")
-

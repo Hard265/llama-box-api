@@ -34,5 +34,13 @@ def create_user(data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserSchema)
-async def read_users_me(current_user: TokenData = Depends(get_current_user)):
-    return {"email": current_user.email}
+async def read_users_me(
+    current_user: TokenData = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == current_user.sub).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return user
