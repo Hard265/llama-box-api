@@ -56,24 +56,20 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     return token_data
 
 
-def get_current_user_from_request(request: Request) -> TokenData:
-    credential_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+def get_current_user_from_request(request: Request) -> Optional[TokenData]:
     auth_header = request.headers.get("Authorization")
     if not auth_header:
-        raise credential_exception
+        return None
+
     scheme, token = get_authorization_scheme_param(auth_header)
     if not scheme or not token or scheme.lower() != "bearer":
-        raise credential_exception
+        return None
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # type: ignore
-        sub: Optional[str] = payload.get("sub")
+        sub = payload.get("sub")
         if sub is None:
-            raise credential_exception
-        token_data = TokenData(sub=sub)
-    except JWTError as e:
-        raise credential_exception
-    return token_data
+            return None
+        return TokenData(sub=sub)
+    except JWTError:
+        return None
