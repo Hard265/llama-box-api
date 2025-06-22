@@ -15,10 +15,9 @@ from app.graphql.types import (
     DeleteResponse,
 )
 from app.models.permission import FolderPermission, RoleEnum
-import logging
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-
-logger = logging.getLogger(__name__)
+from app.services.folder import create_folder
+from app.graphql.errors import FolderOperationError
 
 
 @strawberry.type
@@ -26,14 +25,12 @@ class FolderMutations:
     @strawberry.mutation
     def create(self, info: strawberry.Info, input: FolderCreationInput) -> FolderType:
         user = info.context.get("user")
-        if not user or not hasattr(user, "sub"):
-            raise ValueError("User not authenticated")
-        sub = user.sub
-
+        if not user:
+            raise FolderOperationError("Authentication required", "UNAUTHENTICATED")
         try:
             data = FolderCreate(name=input.name, parent_id=input.parent_id)
-        except ValidationError as e:
-            raise ValueError(f"Invalid input: {str(e)}")
+        except ValidationError as exc:
+            raise FolderOperationError("Invalid input data", "INVALID_INPUT") from exc
 
         with next(get_db()) as db:
             if data.parent_id:
@@ -44,27 +41,19 @@ class FolderMutations:
                     )
 
             try:
-                folder = Folder(name=data.name, parent_id=data.parent_id)
-                db.add(folder)
-                db.flush()
-                permission = FolderPermission(
-                    user_id=UUID(sub), folder_id=folder.id, role=RoleEnum.owner
-                )
-                db.add(permission)
-                db.commit()
-                db.refresh(folder)
-                db.refresh(permission)
+                folder = create_folder(db=db, folder_data=data, user_id=UUID(user.sub))
+                if not folder:
+                    raise FolderOperationError("Folder does not exist", "NOT_FOUND")
                 return folder
-            except IntegrityError as e:
+            except IntegrityError:
                 db.rollback()
-                logger.error(f"Integrity error creating folder: {str(e)}")
-                raise ValueError(
-                    "Folder creation failed: likely duplicate name or invalid parent"
-                ) from e
-            except SQLAlchemyError as e:
+                raise FolderOperationError(
+                    "Database integrity error", "INTEGRITY_ERROR"
+                )
+
+            except SQLAlchemyError:
                 db.rollback()
-                logger.error(f"Database error creating folder: {str(e)}")
-                raise Exception("Database error occurred") from e
+                raise FolderOperationError("Internal server error", "INTERNAL_ERROR")
 
     @strawberry.mutation
     def update(self, info: strawberry.Info, input: FolderUpdateInput) -> FolderType:

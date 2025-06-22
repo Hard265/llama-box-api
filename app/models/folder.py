@@ -49,10 +49,10 @@ class Folder(Base):
         "FolderPermission", back_populates="folder", cascade="all, delete-orphan"
     )
     parent = relationship("Folder", remote_side=[id], backref="folders")
-
+    
     @property
     def owner(self) -> Optional[User]:
         return next(
-            (perm.user for perm in self.permissions if perm.role == RoleEnum.viewer),
+            (perm.user for perm in self.permissions if perm.role == RoleEnum.owner),
             None,
         )
