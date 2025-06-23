@@ -52,10 +52,6 @@ def create_folder(db: Session, folder_data: FolderCreate, user_id: UUID):
     )
     db.add(permission)
     db.commit()
-    folder = (
-        db.query(Folder)
-        .options(joinedload(Folder.permissions))
-        .filter(Folder.id == folder.id)
-        .first()
-    )
+    db.refresh(folder)
+    db.refresh(permission)
     return folder

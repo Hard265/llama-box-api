@@ -24,6 +24,7 @@ class FolderType:
     links: List[LinkType]
     permissions: List[FolderPermissionType]
     parent: Optional["FolderType"]
+    owner: UserType
 
 
 @strawberry.type
