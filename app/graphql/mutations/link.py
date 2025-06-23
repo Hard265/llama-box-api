@@ -1,4 +1,4 @@
-from uuid import uuid4
+from uuid import uuid4, UUID
 from pydantic import ValidationError
 import strawberry
 from datetime import datetime, timezone
@@ -10,45 +10,36 @@ from app.models.folder import Folder
 from app.models.link import Link
 from app.graphql.types import LinkInput, LinkType
 from app.schemas.link import LinkCreate
+from app.graphql.errors import LinkOperationError
+from app.services.link import create_link
+
 
 @strawberry.type
 class LinkMutations:
     @strawberry.mutation
     def create(self, info: Info, input: LinkInput) -> LinkType:
+        user = info.context.get("user")
+        if not user:
+            raise LinkOperationError("Authentication required", "UNAUTHENTICATED")
+
         try:
             data = LinkCreate(**input.__dict__)
         except ValidationError as e:
-            raise Exception(e.json())
+            raise LinkOperationError("Invalid input data", "BAD_INPUT") from e
 
         db = next(get_db())
-        
         try:
-
-            if data.file_id:
-                target = db.query(File).get(data.file_id)
-                if not target:
-                    raise Exception("File not found")
-            elif data.folder_id:
-                target = db.query(Folder).get(data.folder_id)
-                if not target:
-                    raise Exception("Folder not found")
-            else:
-                raise Exception("Either file_id or folder_id must be provided")
-            
-            token = uuid4()
-            link = Link(
-                file_id=data.file_id,
-                folder_id=data.folder_id,
-                password=data.password,
-                expires_at=data.expires_at,
-                created_at=datetime.now(timezone.utc),
-            )
-
-            db.add(link)
-            db.commit()
-            db.refresh(link)
-
+            link, error = create_link(db=db, data=data, user_id=UUID(user.sub))
+            if error:
+                if error == "NOT_FOUND":
+                    raise LinkOperationError(
+                        "Target not found or permission denied", "NOT_FOUND"
+                    )
+                if error == "BAD_INPUT":
+                    raise LinkOperationError("Invalid input data", "BAD_INPUT")
+            if not link:
+                raise LinkOperationError("Failed to create link", "INTERNAL_ERROR")
             return link
         except SQLAlchemyError:
             db.rollback()
-            raise Exception("Intenal server error")
+            raise LinkOperationError("Internal server error", "INTERNAL_ERROR")
