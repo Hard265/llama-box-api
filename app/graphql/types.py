@@ -90,7 +90,6 @@ class FolderCreationInput:
 
 @strawberry.input
 class FolderUpdateInput:
-    id: UUID
     name: Optional[str] = None
     parent_id: Optional[UUID] = None
 

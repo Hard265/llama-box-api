@@ -7,6 +7,7 @@ from fastapi import status
 from typing import Optional
 from app.database import get_db
 from app.models.folder import Folder
+from app.models.permission import FolderPermission
 from app.schemas.folders import FolderCreate, FolderUpdate
 from app.graphql.types import (
     FolderCreationInput,
@@ -16,7 +17,7 @@ from app.graphql.types import (
 )
 from app.models.permission import RoleEnum
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from app.services.folder import create_folder
+from app.services.folder import create_folder, update_folder, delete_folder
 from app.graphql.errors import FolderOperationError
 
 
@@ -32,71 +33,91 @@ class FolderMutations:
         except ValidationError as exc:
             raise FolderOperationError("Invalid input data", "INVALID_INPUT") from exc
 
-        with next(get_db()) as db:
-            if data.parent_id:
-                parent = db.query(Folder).filter(Folder.id == data.parent_id).first()
-                if not parent:
-                    raise ValueError(
-                        f"Parent folder with ID {data.parent_id} does not exist"
-                    )
-
-            try:
-                folder = create_folder(db=db, folder_data=data, user_id=UUID(user.sub))
-                if not folder:
-                    raise FolderOperationError("Folder does not exist", "NOT_FOUND")
-                return folder
-            except IntegrityError:
-                db.rollback()
+        db = next(get_db())
+        try:
+            folder, error = create_folder(
+                db=db, folder_data=data, user_id=UUID(user.sub)
+            )
+            if error == "NOT_FOUND":
+                raise FolderOperationError(
+                    f"Parent folder with ID {data.parent_id} does not exist",
+                    "NOT_FOUND",
+                )
+            elif error == "INTEGRITY_ERROR":
                 raise FolderOperationError(
                     "Database integrity error", "INTEGRITY_ERROR"
                 )
-
-            except SQLAlchemyError:
-                db.rollback()
+            elif error == "INTERNAL_ERROR":
                 raise FolderOperationError("Internal server error", "INTERNAL_ERROR")
-
-    @strawberry.mutation
-    def update(self, info: strawberry.Info, input: FolderUpdateInput) -> FolderType:
-        try:
-            data = FolderUpdate(**input.__dict__)
-        except ValidationError as e:
-            raise Exception(e.json())
-        db = next(get_db())
-        try:
-            folder: Optional[Folder] = db.query(Folder).get(data.id)
-            if not folder:
-                raise Exception("Folder doesn't exist")
-
-            for field in FolderUpdate.model_fields:
-                if field == "id":
-                    continue
-                if field in input.__dict__:
-                    setattr(folder, field, getattr(data, field, None))
-
-            db.commit()
-            db.refresh(folder)
+            elif not folder:
+                raise FolderOperationError(
+                    "Unknown error occurred during folder creation", "INTERNAL_ERROR"
+                )
             return folder
         except SQLAlchemyError:
             db.rollback()
-            raise Exception("Internal server error")
+            raise FolderOperationError(
+                "Database error occurred while creating folder", "INTERNAL_ERROR"
+            )
+
+    @strawberry.mutation
+    def update(
+        self, info: strawberry.Info, id: UUID, input: FolderUpdateInput
+    ) -> FolderType:
+        user = info.context.get("user")
+        if not user:
+            raise FolderOperationError("Authentication required", "UNAUTHENTICATED")
+        try:
+            data = FolderUpdate(id=id, **input.__dict__)
+        except ValidationError as exc:
+            raise FolderOperationError(
+                "Invalid input data for folder update", "INVALID_INPUT"
+            ) from exc
+        db = next(get_db())
+        try:
+            folder, error = update_folder(db, UUID(user.sub), data, input)
+            if error == "FORBIDDEN":
+                raise FolderOperationError(
+                    "You do not have permission to update this folder", "FORBIDDEN"
+                )
+            elif error == "NOT_FOUND":
+                raise FolderOperationError("Folder not found for update", "NOT_FOUND")
+            elif not folder:
+                raise FolderOperationError(
+                    "Unknown error occurred during folder update", "INTERNAL_ERROR"
+                )
+            return folder
+        except SQLAlchemyError:
+            db.rollback()
+            raise FolderOperationError(
+                "Database error occurred while updating folder", "INTERNAL_ERROR"
+            )
 
     @strawberry.mutation
     def delete(
         self,
-        _: strawberry.Info,
+        info: strawberry.Info,
         id: UUID,
     ) -> DeleteResponse:
+        user = info.context.get("user")
+        if not user:
+            raise FolderOperationError("Authentication required", "UNAUTHENTICATED")
         db = next(get_db())
         try:
-            folder_obj = db.query(Folder).get(id)
-            if not folder_obj:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found"
+            success, error = delete_folder(db, UUID(user.sub), id)
+            if error == "FORBIDDEN":
+                raise FolderOperationError(
+                    "Only the owner can delete this folder", "FORBIDDEN"
                 )
-
-            db.delete(folder_obj)
-            db.commit()
+            elif error == "NOT_FOUND":
+                raise FolderOperationError("Folder not found", "NOT_FOUND")
+            elif not success:
+                raise FolderOperationError(
+                    "Unknown error occurred during folder deletion", "INTERNAL_ERROR"
+                )
             return DeleteResponse(success=True, message="Folder deleted successully")
         except SQLAlchemyError:
             db.rollback()
-            raise Exception("Internal server error")
+            raise FolderOperationError(
+                "Database error occurred while deleting folder", "INTERNAL_ERROR"
+            )
