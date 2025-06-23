@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.folder import Folder
 from app.models.permission import FolderPermission, RoleEnum
-from app.schemas.folders import FolderCreate
+from app.schemas.folder import FolderCreate
 
 
 def get_folder(db: Session, user_id: UUID, id: UUID):

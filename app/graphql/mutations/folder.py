@@ -8,7 +8,7 @@ from typing import Optional
 from app.database import get_db
 from app.models.folder import Folder
 from app.models.permission import FolderPermission
-from app.schemas.folders import FolderCreate, FolderUpdate
+from app.schemas.folder import FolderCreate, FolderUpdate
 from app.graphql.types import (
     FolderCreationInput,
     FolderType,
