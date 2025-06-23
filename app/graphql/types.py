@@ -105,7 +105,8 @@ class DeleteResponse:
 @strawberry.input
 class FileUpdateInput:
     name: Optional[str] = None
-    starred: Optional[bool] = False
+    folder_id: Optional[UUID] = None
+    starred: Optional[bool] = None
 
 
 @strawberry.enum

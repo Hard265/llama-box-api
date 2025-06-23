@@ -7,6 +7,7 @@ from app.database import get_db
 from app.graphql.errors import FileOperationError
 from app.graphql.types import FileType
 from app.services.file import get_user_file, get_user_files
+from sqlalchemy.orm import Session
 
 
 @strawberry.type
@@ -17,12 +18,16 @@ class FileQueries:
         if not user:
             raise FileOperationError("Authentication required", "UNAUTHENTICATED")
 
-        db = next(get_db())
-        file = get_user_file(db=db, user_id=UUID(user.sub), id=id)
-        if not file:
-            raise FileOperationError("File does not exist", "NOT_FOUND")
-
-        return file
+        db: Session = next(get_db())
+        try:
+            file_instance, error = get_user_file(db=db, user_id=UUID(user.sub), id=id)
+            if error == "NOT_FOUND":
+                raise FileOperationError("File does not exist", "NOT_FOUND")
+            elif not file_instance:
+                raise FileOperationError("Unable to retrieve file", "INTERNAL_ERROR")
+            return file_instance
+        finally:
+            db.close()
 
     @strawberry.field
     def get_all(
@@ -32,6 +37,9 @@ class FileQueries:
         if not user:
             raise FileOperationError("Authentication required", "UNAUTHENTICATED")
 
-        db = next(get_db())
-        files = list(get_user_files(db=db, user_id=UUID(user.sub), folder_id=folder_id))
-        return files
+        db: Session = next(get_db())
+        try:
+            files = get_user_files(db=db, user_id=UUID(user.sub), folder_id=folder_id)
+            return files
+        finally:
+            db.close()
