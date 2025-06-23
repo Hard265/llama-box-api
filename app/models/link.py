@@ -1,11 +1,16 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-from sqlalchemy import UUID, Column, ForeignKey, String, DateTime
+from sqlalchemy import UUID, Column, ForeignKey, String, DateTime, Enum
 from sqlalchemy.orm import relationship, validates
 from secrets import token_urlsafe
 
 from app.database import Base
 from app.utils.security import hash_password, verify_password
+
+
+class LinkPermission(str, Enum):
+    edit = "edit"
+    view = "view"
 
 
 class Link(Base):
@@ -26,13 +31,17 @@ class Link(Base):
     folder_id = Column(
         UUID(as_uuid=True), ForeignKey("folders.id", ondelete="CASCADE"), nullable=True
     )
-    shared_with_id = Column(String, nullable=True)
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE", nullable=False)
+    )
+    permisssion = Column(LinkPermission, default=LinkPermission.view, nullable=False)
     password = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     expires_at = Column(DateTime, nullable=True)
 
     file = relationship("File", back_populates="links")
     folder = relationship("Folder", back_populates="links")
+    user = relationship("User", back_populates="links")
 
     @validates("password")
     def _hash_password(self, _, value: str):

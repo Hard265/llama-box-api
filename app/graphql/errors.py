@@ -7,3 +7,6 @@ class FileOperationError(GraphQLError):
 
 class FolderOperationError(FileOperationError):
     pass
+
+class LinkOperationError(FileOperati
+    pass

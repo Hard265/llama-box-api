@@ -17,3 +17,6 @@ class User(Base):
     folder_permissions = relationship(
         "FolderPermission", back_populates="user", cascade="all, delete-orphan"
     )
+    links = relationship(
+        "Link", back_populates="user", cascade="all, delete", passive_deletes=True
+    )
