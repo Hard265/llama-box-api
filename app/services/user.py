@@ -32,7 +32,7 @@ def create_user(data: UserCreate, db: Session):
 
 
 def get_user_by_sub(sub: Optional[str], db: Session):
-    user = db.query(User).filter(User.id == sub).first()
+    user = db.query(User).filter(User.id == UUID(sub)).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
