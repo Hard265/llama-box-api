@@ -48,7 +48,10 @@ class LinkQueries:
     @strawberry.field
     def get_by_token(
         self, info: strawberry.Info, token: str, password: Optional[str] = None
-    ):
+    ) -> LinkType:
+        """
+        Get a link by its token, optionally checking for a password.
+        """
         user = info.context.get("user")
         if not user:
             raise LinkOperationError("Authentication required", "UNAUTHENTICATED")

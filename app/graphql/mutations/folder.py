@@ -14,7 +14,7 @@ from app.graphql.types import (
     FolderUpdateInput,
     DeleteResponse,
 )
-from app.models.permission import FolderPermission, RoleEnum
+from app.models.permission import RoleEnum
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.services.folder import create_folder
 from app.graphql.errors import FolderOperationError

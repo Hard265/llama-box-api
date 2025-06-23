@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-from sqlalchemy import UUID, Column, ForeignKey, String, DateTime, Enum
+from enum import Enum
+from sqlalchemy import UUID, Column, ForeignKey, String, DateTime, Enum as SQLAEnum
 from sqlalchemy.orm import relationship, validates
 from secrets import token_urlsafe
 
@@ -32,9 +33,11 @@ class Link(Base):
         UUID(as_uuid=True), ForeignKey("folders.id", ondelete="CASCADE"), nullable=True
     )
     user_id = Column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE", nullable=False)
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    permisssion = Column(LinkPermission, default=LinkPermission.view, nullable=False)
+    permisssion = Column(
+        SQLAEnum(LinkPermission), default=LinkPermission.view, nullable=False
+    )
     password = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     expires_at = Column(DateTime, nullable=True)
