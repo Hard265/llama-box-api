@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.schemas.auth import Token, TokenRequest
+from app.schemas.auth import Token, TokenRequest, RefreshTokenRequest
 from app.database import get_db
 from app.models.user import User
-from app.core.auth import verify_hash, create_access_token
+from app.core.auth import verify_hash, create_access_token, create_refresh_token, decode_refresh_token
 
 router = APIRouter()
 
@@ -18,4 +18,20 @@ async def login_for_acces_token(data: TokenRequest, db: Session = Depends(get_db
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = create_access_token(data={"sub": str(user.id)})  # type: ignore
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+@router.post("/refresh", response_model=Token)
+async def refresh_access_token(refresh_token: RefreshTokenRequest):
+    token_data = decode_refresh_token(refresh_token.refresh_token)
+    access_token = create_access_token(data={"sub": str(token_data.sub)})
+    new_refresh_token = create_refresh_token(data={"sub": str(token_data.sub)})
+    return {
+        "access_token": access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer"
+    }

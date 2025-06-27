@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-from typing import Optional
+from typing import Optional, List, Dict
 from sqlalchemy import (
     UUID,
     Boolean,
@@ -49,10 +49,21 @@ class Folder(Base):
         "FolderPermission", back_populates="folder", cascade="all, delete-orphan"
     )
     parent = relationship("Folder", remote_side=[id], backref="folders")
-    
+
     @property
     def owner(self) -> Optional[User]:
         return next(
             (perm.user for perm in self.permissions if perm.role == RoleEnum.owner),
             None,
         )
+
+    @property
+    def path(self):
+        parts = []
+        current = self
+        while current is not None:
+            parts.append({"id": current.id, "name": current.name})
+            current = current.parent
+        parts.reverse()
+        parts = [{"id": None, "name": "Root"}] + parts
+        return parts

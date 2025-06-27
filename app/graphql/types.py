@@ -14,6 +14,12 @@ class UserType:
 
 
 @strawberry.type
+class PathItemType:
+    id: Optional[UUID]
+    name: str
+
+
+@strawberry.type
 class FolderType:
     id: UUID
     name: str
@@ -25,6 +31,7 @@ class FolderType:
     permissions: List[FolderPermissionType]
     parent: Optional["FolderType"]
     owner: UserType
+    path: List[PathItemType]
 
 
 @strawberry.type
