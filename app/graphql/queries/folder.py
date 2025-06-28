@@ -15,9 +15,6 @@ class FolderQueries:
     @strawberry.field
     def get(self, info: strawberry.Info, id: UUID) -> Optional[FolderType]:
         user = info.context.get("user")
-        if not user:
-            raise FolderOperationError("Authentication required", "UNAUTHENTICATED")
-
         db: Session = next(get_db())
         folder = get_folder(db=db, user_id=UUID(user.sub), id=id)
         if not folder:
@@ -32,9 +29,6 @@ class FolderQueries:
         self, info: strawberry.Info, parent_id: Optional[UUID] = None
     ) -> Sequence[FolderType]:
         user = info.context.get("user")
-        if not user:
-            raise FolderOperationError("Authentication required", "UNAUTHENTICATED")
-
         db = next(get_db())
         folders = list(get_folders(db=db, user_id=UUID(user.sub), parent_id=parent_id))
         return folders

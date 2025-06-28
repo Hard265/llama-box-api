@@ -15,9 +15,6 @@ class FileQueries:
     @strawberry.field
     def get(self, info: strawberry.Info, id: UUID) -> Optional[FileType]:
         user = info.context.get("user")
-        if not user:
-            raise FileOperationError("Authentication required", "UNAUTHENTICATED")
-
         db: Session = next(get_db())
         try:
             file_instance, error = get_user_file(db=db, user_id=UUID(user.sub), id=id)
@@ -34,9 +31,6 @@ class FileQueries:
         self, info: strawberry.Info, folder_id: Optional[UUID] = None
     ) -> Sequence[FileType]:
         user = info.context.get("user")
-        if not user:
-            raise FileOperationError("Authentication required", "UNAUTHENTICATED")
-
         db: Session = next(get_db())
         try:
             files = get_user_files(db=db, user_id=UUID(user.sub), folder_id=folder_id)

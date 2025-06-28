@@ -1,5 +1,6 @@
 import strawberry
 from strawberry.fastapi import GraphQLRouter
+from strawberry.permission import PermissionExtension
 
 from app.core.context import get_context
 from app.graphql.mutations.file import FileMutations
@@ -13,51 +14,55 @@ from app.graphql.queries.permission import (
     FilePermissionQueries,
     FolderPermissionQueries,
 )
+from app.graphql.permissions import IsAuthenticated
 
 
 @strawberry.type
 class Query:
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def link(self) -> LinkQueries:
         return LinkQueries()
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def file(self) -> FileQueries:
         return FileQueries()
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def folder(self) -> FolderQueries:
         return FolderQueries()
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def file_permission(self) -> FilePermissionQueries:
         return FilePermissionQueries()
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def folder_permission(self) -> FolderPermissionQueries:
         return FolderPermissionQueries()
 
 
 @strawberry.type
 class Mutation:
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def link(self) -> LinkMutations:
         return LinkMutations()
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def folder(self) -> FolderMutations:
         return FolderMutations()
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def file(self) -> FileMutations:
         return FileMutations()
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def file_permission(self) -> FilePermissionMutations:
         return FilePermissionMutations()
 
 
-schema = strawberry.Schema(query=Query, mutation=Mutation)
+schema = strawberry.Schema(
+    query=Query,
+    mutation=Mutation,
+)
 graphql_app = GraphQLRouter(
     schema, multipart_uploads_enabled=True, context_getter=get_context
 )

@@ -39,9 +39,6 @@ class FilePermissionMutations:
         self, info: strawberry.Info, input: FilePermissionCreateInput
     ) -> FilePermissionType:
         user = info.context.get("user")
-        if not user:
-            raise FileOperationError("Authentication required", "UNAUTHENTICATED")
-
         try:
             data = CreateFilePermission(
                 user_id=input.user_id,

@@ -19,9 +19,6 @@ class LinkMutations:
     @strawberry.mutation
     def create(self, info: Info, input: LinkInput) -> LinkType:
         user = info.context.get("user")
-        if not user:
-            raise LinkOperationError("Authentication required", "UNAUTHENTICATED")
-
         try:
             data = LinkCreate(**input.__dict__)
         except ValidationError as e:

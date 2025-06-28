@@ -20,13 +20,13 @@ class FilePermissionQueries:
             raise GraphQLError("Invalid permission ID format")
 
         user = info.context.get("user")
-        if not user:
-            raise GraphQLError("Authentication required")
         db = next(get_db())
         try:
             permission = (
                 db.query(FilePermission)
-                .options(joinedload(FilePermission.file), joinedload(FilePermission.user))
+                .options(
+                    joinedload(FilePermission.file), joinedload(FilePermission.user)
+                )
                 .filter(
                     FilePermission.id == permission_id,
                     FilePermission.user_id == UUID(user.sub),
@@ -42,13 +42,13 @@ class FilePermissionQueries:
     @strawberry.field
     def getAll(self, info: strawberry.Info) -> Sequence[FilePermissionType]:
         user = info.context.get("user")
-        if not user:
-            raise GraphQLError("Authentication required")
         db = next(get_db())
         try:
             permissions = (
                 db.query(FilePermission)
-                .options(joinedload(FilePermission.file), joinedload(FilePermission.user))
+                .options(
+                    joinedload(FilePermission.file), joinedload(FilePermission.user)
+                )
                 .filter(FilePermission.user_id == UUID(user.sub))
             )
             return list(permissions)
@@ -66,13 +66,14 @@ class FolderPermissionQueries:
             raise GraphQLError("Invalid permission ID format")
 
         user = info.context.get("user")
-        if not user:
-            raise GraphQLError("Authentication required")
         db = next(get_db())
         try:
             permission = (
                 db.query(FolderPermission)
-                .options(joinedload(FolderPermission.folder), joinedload(FolderPermission.user))
+                .options(
+                    joinedload(FolderPermission.folder),
+                    joinedload(FolderPermission.user),
+                )
                 .filter(
                     FolderPermission.id == permission_id,
                     FolderPermission.user_id == UUID(user.sub),
@@ -88,13 +89,14 @@ class FolderPermissionQueries:
     @strawberry.field
     def getAll(self, info: strawberry.Info) -> Sequence[FolderPermissionType]:
         user = info.context.get("user")
-        if not user:
-            raise GraphQLError("Authentication required")
         db = next(get_db())
         try:
             permissions = (
                 db.query(FolderPermission)
-                .options(joinedload(FolderPermission.folder), joinedload(FolderPermission.user))
+                .options(
+                    joinedload(FolderPermission.folder),
+                    joinedload(FolderPermission.user),
+                )
                 .filter(FolderPermission.user_id == UUID(user.sub))
             )
             return list(permissions)

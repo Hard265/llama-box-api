@@ -26,8 +26,6 @@ class FolderMutations:
     @strawberry.mutation
     def create(self, info: strawberry.Info, input: FolderCreationInput) -> FolderType:
         user = info.context.get("user")
-        if not user:
-            raise FolderOperationError("Authentication required", "UNAUTHENTICATED")
         try:
             data = FolderCreate(name=input.name, parent_id=input.parent_id)
         except ValidationError as exc:
@@ -65,8 +63,6 @@ class FolderMutations:
         self, info: strawberry.Info, id: UUID, input: FolderUpdateInput
     ) -> FolderType:
         user = info.context.get("user")
-        if not user:
-            raise FolderOperationError("Authentication required", "UNAUTHENTICATED")
         try:
             data = FolderUpdate(id=id, **input.__dict__)
         except ValidationError as exc:
@@ -100,8 +96,6 @@ class FolderMutations:
         id: UUID,
     ) -> DeleteResponse:
         user = info.context.get("user")
-        if not user:
-            raise FolderOperationError("Authentication required", "UNAUTHENTICATED")
         db = next(get_db())
         try:
             success, error = delete_folder(db, UUID(user.sub), id)

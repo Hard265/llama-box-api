@@ -27,8 +27,6 @@ class FileMutations:
         self, info: strawberry.Info, file: Upload, folder_id: Optional[str] = None
     ) -> FileType:
         user = info.context.get("user")
-        if not user:
-            raise FileOperationError("Authentication required", "UNAUTHENTICATED")
         db = next(get_db())
         try:
             file_instance, error = await create_file(
@@ -62,8 +60,6 @@ class FileMutations:
         id: UUID,
     ) -> FileDeleteResult:
         user = info.context.get("user")
-        if not user:
-            raise FileOperationError("Authentication required", "UNAUTHENTICATED")
         db = next(get_db())
         try:
             success, error = delete_file(db=db, user_id=UUID(user.sub), file_id=id)
@@ -98,8 +94,6 @@ class FileMutations:
         input: FileUpdateInput,
     ) -> FileType:
         user = info.context.get("user")
-        if not user:
-            raise FileOperationError("Authentication required", "UNAUTHENTICATED")
         db = next(get_db())
         try:
             file_obj, error = update_file(

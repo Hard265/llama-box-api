@@ -14,9 +14,6 @@ class LinkQueries:
     @strawberry.field
     def get_all(self, info: strawberry.Info) -> Sequence[LinkType]:
         user = info.context.get("user")
-        if not user:
-            raise LinkOperationError("Authentication required", "UNAUTHENTICATED")
-
         db = next(get_db())
         try:
             links = get_user_links(db=db, user_id=UUID(user.sub))
@@ -27,9 +24,6 @@ class LinkQueries:
     @strawberry.field
     def get(self, info: strawberry.Info, id: str) -> Optional[LinkType]:
         user = info.context.get("user")
-        if not user:
-            raise LinkOperationError("Authentication required", "UNAUTHENTICATED")
-
         try:
             link_id = UUID(id)
         except ValueError as exc:
@@ -53,9 +47,6 @@ class LinkQueries:
         Get a link by its token, optionally checking for a password.
         """
         user = info.context.get("user")
-        if not user:
-            raise LinkOperationError("Authentication required", "UNAUTHENTICATED")
-
         db = next(get_db())
         try:
             link = get_link(db=db, token=token)
