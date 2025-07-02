@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from app.database import Base, engine
 from app.graphql.schema import graphql_app
 from app.api.v1.endpoints.user import router as users_router
@@ -9,10 +9,14 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+api_v1_router = APIRouter()
+
+api_v1_router.include_router(users_router, prefix="/users", tags=["users"])
+api_v1_router.include_router(share_router, prefix="/s", tags=["shares"])
+api_v1_router.include_router(auth_router, prefix="", tags=["authentications", "auth"])
+
 app.include_router(graphql_app, prefix="/graphql", tags=["GraphQL"])
-app.include_router(users_router, prefix="/users", tags=["users"])
-app.include_router(share_router, prefix="/s", tags=["shares"])
-app.include_router(auth_router, prefix="", tags=["authentications", "auth"])
+app.include_router(api_v1_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn
