@@ -68,3 +68,4 @@ Pipfile.lock
 # Optional: If using coverage
 .coverage
 coverage.xml
+logfile
