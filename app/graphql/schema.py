@@ -58,6 +58,10 @@ class Mutation:
     def file_permission(self) -> FilePermissionMutations:
         return FilePermissionMutations()
 
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def folder_permission(self) -> FolderPermissionMutations:
+        return FolderPermissionMutations()
+
 
 schema = strawberry.Schema(
     query=Query,

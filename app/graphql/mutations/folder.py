@@ -5,6 +5,8 @@ import strawberry
 from fastapi.exceptions import HTTPException
 from fastapi import status
 from typing import Optional
+from strawberry.exceptions import StrawberryGraphQLError
+
 from app.database import get_db
 from app.models.folder import Folder
 from app.models.permission import FolderPermission
@@ -18,7 +20,6 @@ from app.graphql.types import (
 from app.models.permission import RoleEnum
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.services.folder import create_folder, update_folder, delete_folder
-from app.graphql.errors import FolderOperationError
 
 
 @strawberry.type
@@ -29,34 +30,28 @@ class FolderMutations:
         try:
             data = FolderCreate(name=input.name, parent_id=input.parent_id)
         except ValidationError as exc:
-            raise FolderOperationError("Invalid input data", "INVALID_INPUT") from exc
+            raise StrawberryGraphQLError(
+                "Invalid input data", extensions={"code": "INVALID_INPUT"}
+            ) from exc
 
         db = next(get_db())
         try:
             folder, error = create_folder(
                 db=db, folder_data=data, user_id=UUID(user.sub)
             )
-            if error == "NOT_FOUND":
-                raise FolderOperationError(
-                    f"Parent folder with ID {data.parent_id} does not exist",
-                    "NOT_FOUND",
-                )
-            elif error == "INTEGRITY_ERROR":
-                raise FolderOperationError(
-                    "Database integrity error", "INTEGRITY_ERROR"
-                )
-            elif error == "INTERNAL_ERROR":
-                raise FolderOperationError("Internal server error", "INTERNAL_ERROR")
-            elif not folder:
-                raise FolderOperationError(
-                    "Unknown error occurred during folder creation", "INTERNAL_ERROR"
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Could not create folder", extensions={"code": error}
                 )
             return folder
         except SQLAlchemyError:
             db.rollback()
-            raise FolderOperationError(
-                "Database error occurred while creating folder", "INTERNAL_ERROR"
+            raise StrawberryGraphQLError(
+                "Database error occurred while creating folder",
+                extensions={"code": "INTERNAL_ERROR"},
             )
+        finally:
+            db.close()
 
     @strawberry.mutation
     def update(
@@ -66,28 +61,26 @@ class FolderMutations:
         try:
             data = FolderUpdate(id=id, **input.__dict__)
         except ValidationError as exc:
-            raise FolderOperationError(
-                "Invalid input data for folder update", "INVALID_INPUT"
+            raise StrawberryGraphQLError(
+                "Invalid input data for folder update",
+                extensions={"code": "INVALID_INPUT"},
             ) from exc
         db = next(get_db())
         try:
             folder, error = update_folder(db, UUID(user.sub), data, input)
-            if error == "FORBIDDEN":
-                raise FolderOperationError(
-                    "You do not have permission to update this folder", "FORBIDDEN"
-                )
-            elif error == "NOT_FOUND":
-                raise FolderOperationError("Folder not found for update", "NOT_FOUND")
-            elif not folder:
-                raise FolderOperationError(
-                    "Unknown error occurred during folder update", "INTERNAL_ERROR"
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Could not update folder", extensions={"code": error}
                 )
             return folder
         except SQLAlchemyError:
             db.rollback()
-            raise FolderOperationError(
-                "Database error occurred while updating folder", "INTERNAL_ERROR"
+            raise StrawberryGraphQLError(
+                "Database error occurred while updating folder",
+                extensions={"code": "INTERNAL_ERROR"},
             )
+        finally:
+            db.close()
 
     @strawberry.mutation
     def delete(
@@ -99,19 +92,16 @@ class FolderMutations:
         db = next(get_db())
         try:
             success, error = delete_folder(db, UUID(user.sub), id)
-            if error == "FORBIDDEN":
-                raise FolderOperationError(
-                    "Only the owner can delete this folder", "FORBIDDEN"
-                )
-            elif error == "NOT_FOUND":
-                raise FolderOperationError("Folder not found", "NOT_FOUND")
-            elif not success:
-                raise FolderOperationError(
-                    "Unknown error occurred during folder deletion", "INTERNAL_ERROR"
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Could not delete folder", extensions={"code": error}
                 )
             return DeleteResponse(success=True, message="Folder deleted successully")
         except SQLAlchemyError:
             db.rollback()
-            raise FolderOperationError(
-                "Database error occurred while deleting folder", "INTERNAL_ERROR"
+            raise StrawberryGraphQLError(
+                "Database error occurred while deleting folder",
+                extensions={"code": "INTERNAL_ERROR"},
             )
+        finally:
+            db.close()

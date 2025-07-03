@@ -1,12 +1,16 @@
+aiofiles==24.1.0
 alembic==1.16.2
 annotated-types==0.7.0
 anyio==4.9.0
 bcrypt==4.3.0
+cachetools==6.0.0
 certifi==2025.4.26
 cffi==1.17.1
 click==8.2.1
 cryptography==45.0.4
+dnspython==2.7.0
 ecdsa==0.19.1
+email_validator==2.2.0
 fastapi==0.115.12
 graphql-core==3.2.6
 greenlet==3.2.3
@@ -20,6 +24,7 @@ MarkupSafe==3.0.2
 packaging==25.0
 passlib==1.7.4
 pluggy==1.6.0
+psycopg2-binary==2.9.10
 pyasn1==0.6.1
 pycparser==2.22
 pydantic==2.11.5
@@ -30,6 +35,7 @@ pytest==8.4.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 python-jose==3.5.0
+python-magic==0.4.27
 python-multipart==0.0.20
 rsa==4.9.1
 six==1.17.0
