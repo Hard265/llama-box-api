@@ -51,6 +51,41 @@ class FilePermissionQueries:
             db.close()
 
     @strawberry.field
+    def get_by_file(
+        self, info: strawberry.Info, file_id: str
+    ) -> Sequence[FilePermissionType]:
+        try:
+            file_uuid = UUID(file_id)
+        except ValueError:
+            raise StrawberryGraphQLError(
+                message="Invalid file ID format", extensions={"code": "BAD_INPUT"}
+            )
+
+        user = info.context.get("user")
+        db = next(get_db())
+        try:
+            permissions = (
+                db.query(FilePermission)
+                .options(
+                    joinedload(FilePermission.file), joinedload(FilePermission.user)
+                )
+                .filter(
+                    FilePermission.file_id == file_uuid,
+                    FilePermission.user_id == UUID(user.sub),
+                )
+                .all()
+            )
+            return permissions
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                message="Database error occurred while retrieving file permissions",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
+        finally:
+            db.close()
+
+    @strawberry.field
     def getAll(self, info: strawberry.Info) -> Sequence[FilePermissionType]:
         user = info.context.get("user")
         db = next(get_db())
@@ -108,6 +143,42 @@ class FolderPermissionQueries:
             db.rollback()
             raise StrawberryGraphQLError(
                 message="Database error occurred while retrieving folder permission",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
+        finally:
+            db.close()
+
+    @strawberry.field
+    def get_by_folder(
+        self, info: strawberry.Info, folder_id: str
+    ) -> Sequence[FolderPermissionType]:
+        try:
+            folder_uuid = UUID(folder_id)
+        except ValueError:
+            raise StrawberryGraphQLError(
+                message="Invalid folder ID format", extensions={"code": "BAD_INPUT"}
+            )
+
+        user = info.context.get("user")
+        db = next(get_db())
+        try:
+            permissions = (
+                db.query(FolderPermission)
+                .options(
+                    joinedload(FolderPermission.folder),
+                    joinedload(FolderPermission.user),
+                )
+                .filter(
+                    FolderPermission.folder_id == folder_uuid,
+                    FolderPermission.user_id == UUID(user.sub),
+                )
+                .all()
+            )
+            return permissions
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                message="Database error occurred while retrieving folder permissions",
                 extensions={"code": "INTERNAL_ERROR"},
             )
         finally:
