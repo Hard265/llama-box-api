@@ -7,7 +7,7 @@ import strawberry
 from strawberry.exceptions import StrawberryGraphQLError
 
 from app.database import get_db
-from app.graphql.types import FilePermissionType, FolderPermissionType
+from app.graphql.types import FilePermissionType, FolderPermissionType, Role
 from app.services.permission import (
     create_folder_permission,
     update_folder_permission,
@@ -22,12 +22,6 @@ from app.schemas.permission import (
     CreateFilePermission,
     UpdateFilePermission,
 )
-
-
-@strawberry.enum
-class Role(str, Enum):
-    viewer = "viewer"
-    editor = "editor"
 
 
 @strawberry.input
