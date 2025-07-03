@@ -68,6 +68,7 @@ def create_folder(db: Session, folder_data: FolderCreate, user_id: UUID):
         db.commit()
         db.refresh(folder)
         db.refresh(permission)
+        _ = folder.files
         return folder, None
     except IntegrityError:
         db.rollback()
