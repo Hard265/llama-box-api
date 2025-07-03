@@ -1,15 +1,11 @@
-from uuid import uuid4, UUID
+from uuid import UUID
 from pydantic import ValidationError
 import strawberry
-from datetime import datetime, timezone
 from strawberry import Info
 from sqlalchemy.exc import SQLAlchemyError
 from strawberry.exceptions import StrawberryGraphQLError
 
 from app.database import get_db
-from app.models.file import File
-from app.models.folder import Folder
-from app.models.link import Link
 from app.graphql.types import LinkInput, LinkType
 from app.schemas.link import LinkCreate
 from app.services.link import create_link

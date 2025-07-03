@@ -1,21 +1,11 @@
 from datetime import datetime, timezone
-from datetime import datetime, timezone
 from typing import Optional
-from typing import List, Optional
+from typing import List
 import uuid
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, UniqueConstraint
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    String,
-    UniqueConstraint,
-)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import backref, relationship
-from sqlalchemy.orm import Mapped, backref, relationship, sessionmaker
 
 from app.database import Base
 from app.models.permission import RoleEnum

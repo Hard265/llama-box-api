@@ -1,12 +1,11 @@
 import strawberry
 from strawberry.fastapi import GraphQLRouter
-from strawberry.permission import PermissionExtension
 
 from app.core.context import get_context
 from app.graphql.mutations.file import FileMutations
 from app.graphql.mutations.folder import FolderMutations
 from app.graphql.mutations.link import LinkMutations
-from app.graphql.mutations.permission import FilePermissionMutations
+from app.graphql.mutations.permission import FilePermissionMutations, FolderPermissionMutations
 from app.graphql.queries.file import FileQueries
 from app.graphql.queries.folder import FolderQueries
 from app.graphql.queries.link import LinkQueries

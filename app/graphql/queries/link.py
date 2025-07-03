@@ -2,10 +2,9 @@ from typing import Optional, Sequence
 from uuid import UUID
 from sqlalchemy.exc import SQLAlchemyError
 import strawberry
+from strawberry.exceptions import StrawberryGraphQLError
 from app.database import get_db
-from app.models.link import Link
 from app.graphql.types import LinkType
-from app.graphql.errors import LinkOperationError
 from app.services.link import get_user_link, get_user_links, get_link
 
 
@@ -18,8 +17,14 @@ class LinkQueries:
         try:
             links = get_user_links(db=db, user_id=UUID(user.sub))
             return links
-        except SQLAlchemyError as exc:
-            raise LinkOperationError("Internal sever error", "INTERNAL_ERROR") from exc
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                "Database error occurred while retrieving links",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
+        finally:
+            db.close()
 
     @strawberry.field
     def get(self, info: strawberry.Info, id: str) -> Optional[LinkType]:
@@ -27,17 +32,27 @@ class LinkQueries:
         try:
             link_id = UUID(id)
         except ValueError as exc:
-            raise LinkOperationError("Invalid Link id format", "BAD_INPUT") from exc
+            raise StrawberryGraphQLError(
+                message="Invalid Link id format", extensions={"code": "BAD_INPUT"}
+            ) from exc
 
         db = next(get_db())
         try:
-            link = get_user_link(db=db, user_id=UUID(user.id), id=link_id)
+            link = get_user_link(db=db, user_id=UUID(user.sub), id=link_id)
             if not link:
-                raise LinkOperationError("Link does not exist", "NOT_FOUND")
+                raise StrawberryGraphQLError(
+                    message="Link does not exist", extensions={"code": "NOT_FOUND"}
+                )
 
             return link
         except SQLAlchemyError:
-            raise LinkOperationError("Internal sever error", "INTERNAL_ERROR")
+            db.rollback()
+            raise StrawberryGraphQLError(
+                "Database error occurred while retrieving link",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
+        finally:
+            db.close()
 
     @strawberry.field
     def get_by_token(
@@ -46,18 +61,26 @@ class LinkQueries:
         """
         Get a link by its token, optionally checking for a password.
         """
-        user = info.context.get("user")
         db = next(get_db())
         try:
             link = get_link(db=db, token=token)
             if not link:
-                raise LinkOperationError("Link does not exist", "NOT_FOUND")
+                raise StrawberryGraphQLError(
+                    message="Link does not exist", extensions={"code": "NOT_FOUND"}
+                )
 
             if link.password is not None and not link.check_password(password or ""):
-                raise LinkOperationError(
-                    "This link requires a valid password", "BAD_INPUT"
+                raise StrawberryGraphQLError(
+                    message="This link requires a valid password",
+                    extensions={"code": "BAD_INPUT"},
                 )
 
             return link
         except SQLAlchemyError:
-            raise LinkOperationError("Internal sever error", "INTERNAL_ERROR")
+            db.rollback()
+            raise StrawberryGraphQLError(
+                "Database error occurred while retrieving link by token",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
+        finally:
+            db.close()

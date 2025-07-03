@@ -1,4 +1,3 @@
-from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.services.user import (
@@ -11,11 +10,9 @@ from app.schemas.user import (
     UserCreate,
     UserPasswordChange,
 )
-from app.models.user import User
 from app.schemas.auth import TokenData
 from app.core.auth import get_current_user
 from app.database import get_db
-from app.services.user import create_user as create_user_service, get_user_by_sub
 
 router = APIRouter()
 

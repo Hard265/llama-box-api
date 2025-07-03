@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from uuid import UUID, uuid4
-from typing import Optional, Tuple
+from typing import Optional
 import aiofiles
 import magic
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError

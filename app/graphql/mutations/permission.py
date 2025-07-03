@@ -3,7 +3,6 @@ from uuid import UUID
 
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
 import strawberry
 from strawberry.exceptions import StrawberryGraphQLError
 
@@ -69,7 +68,7 @@ class FolderPermissionMutations:
                     message="Could not create permission", extensions={"code": error}
                 )
             return permission
-        except SQLAlchemyError as exc:
+        except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
                 "Internal server error", extensions={"code": "INTERNAL_ERROR"}
@@ -99,7 +98,7 @@ class FolderPermissionMutations:
                     message="Could not update permission", extensions={"code": error}
                 )
             return permission
-        except SQLAlchemyError as exc:
+        except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
                 "Internal server error", extensions={"code": "INTERNAL_ERROR"}
@@ -120,7 +119,7 @@ class FolderPermissionMutations:
                     message="Could not delete permission", extensions={"code": error}
                 )
             return success
-        except SQLAlchemyError as exc:
+        except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
                 "Internal server error", extensions={"code": "INTERNAL_ERROR"}
@@ -167,7 +166,7 @@ class FilePermissionMutations:
                     message="Could not create permission", extensions={"code": error}
                 )
             return permission
-        except SQLAlchemyError as exc:
+        except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
                 "Internal server error", extensions={"code": "INTERNAL_ERROR"}
@@ -197,7 +196,7 @@ class FilePermissionMutations:
                     message="Could not update permission", extensions={"code": error}
                 )
             return permission
-        except SQLAlchemyError as exc:
+        except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
                 "Internal server error", extensions={"code": "INTERNAL_ERROR"}
@@ -218,7 +217,7 @@ class FilePermissionMutations:
                     message="Could not delete permission", extensions={"code": error}
                 )
             return success
-        except SQLAlchemyError as exc:
+        except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
                 "Internal server error", extensions={"code": "INTERNAL_ERROR"}

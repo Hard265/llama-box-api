@@ -5,10 +5,6 @@ from sqlalchemy import pool
 
 from alembic import context
 from app.database import Base
-from app.models.file import File  # type: ignore
-from app.models.folder import Folder  # type: ignore
-from app.models.permission import FilePermission, FolderPermission  # type: ignore
-from app.models.link import Link  # type: ignore
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -1,8 +1,9 @@
 from typing import Optional, Sequence
 from uuid import UUID
 
-from graphql import GraphQLError
+from sqlalchemy.exc import SQLAlchemyError
 import strawberry
+from strawberry.exceptions import StrawberryGraphQLError
 from sqlalchemy.orm import joinedload
 
 from app.database import get_db
@@ -17,7 +18,9 @@ class FilePermissionQueries:
         try:
             permission_id = UUID(id)
         except ValueError:
-            raise GraphQLError("Invalid permission ID format")
+            raise StrawberryGraphQLError(
+                message="Invalid permission ID format", extensions={"code": "BAD_INPUT"}
+            )
 
         user = info.context.get("user")
         db = next(get_db())
@@ -34,8 +37,16 @@ class FilePermissionQueries:
                 .one_or_none()
             )
             if not permission:
-                raise GraphQLError("Permission does not exist")
+                raise StrawberryGraphQLError(
+                    message="Permission does not exist", extensions={"code": "NOT_FOUND"}
+                )
             return permission
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                message="Database error occurred while retrieving file permission",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
         finally:
             db.close()
 
@@ -52,6 +63,12 @@ class FilePermissionQueries:
                 .filter(FilePermission.user_id == UUID(user.sub))
             )
             return list(permissions)
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                message="Database error occurred while retrieving file permissions",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
         finally:
             db.close()
 
@@ -63,7 +80,9 @@ class FolderPermissionQueries:
         try:
             permission_id = UUID(id)
         except ValueError:
-            raise GraphQLError("Invalid permission ID format")
+            raise StrawberryGraphQLError(
+                message="Invalid permission ID format", extensions={"code": "BAD_INPUT"}
+            )
 
         user = info.context.get("user")
         db = next(get_db())
@@ -81,8 +100,16 @@ class FolderPermissionQueries:
                 .one_or_none()
             )
             if not permission:
-                raise GraphQLError("Permission does not exist")
+                raise StrawberryGraphQLError(
+                    message="Permission does not exist", extensions={"code": "NOT_FOUND"}
+                )
             return permission
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                message="Database error occurred while retrieving folder permission",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
         finally:
             db.close()
 
@@ -100,5 +127,11 @@ class FolderPermissionQueries:
                 .filter(FolderPermission.user_id == UUID(user.sub))
             )
             return list(permissions)
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                message="Database error occurred while retrieving folder permissions",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
         finally:
             db.close()

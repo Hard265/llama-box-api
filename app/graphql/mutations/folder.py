@@ -2,14 +2,9 @@ from uuid import UUID
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 import strawberry
-from fastapi.exceptions import HTTPException
-from fastapi import status
-from typing import Optional
 from strawberry.exceptions import StrawberryGraphQLError
 
 from app.database import get_db
-from app.models.folder import Folder
-from app.models.permission import FolderPermission
 from app.schemas.folder import FolderCreate, FolderUpdate
 from app.graphql.types import (
     FolderCreationInput,
@@ -17,8 +12,6 @@ from app.graphql.types import (
     FolderUpdateInput,
     DeleteResponse,
 )
-from app.models.permission import RoleEnum
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.services.folder import create_folder, update_folder, delete_folder
 
 

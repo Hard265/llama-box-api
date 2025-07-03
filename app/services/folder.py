@@ -2,7 +2,7 @@ from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from app.models.folder import Folder
 from app.models.permission import FolderPermission, RoleEnum
@@ -48,7 +48,7 @@ def create_folder(db: Session, folder_data: FolderCreate, user_id: UUID):
     Returns (folder, error_code) where error_code is None or "NOT_FOUND" or "INTEGRITY_ERROR".
     """
     from app.models.folder import Folder
-    from app.models.permission import FolderPermission, RoleEnum
+    from app.models.permission import FolderPermission
 
     # If parent_id is provided, check if parent exists
     if folder_data.parent_id:
@@ -83,7 +83,7 @@ def update_folder(db: Session, user_id: UUID, folder_update_schema, input_data):
     Returns the updated folder or raises an appropriate exception.
     """
     from app.models.folder import Folder
-    from app.models.permission import FolderPermission, RoleEnum
+    from app.models.permission import FolderPermission
 
     id = folder_update_schema.id
 
@@ -132,7 +132,7 @@ def delete_folder(db: Session, user_id: UUID, folder_id: UUID):
     Returns (success, error_code) where error_code is None, "FORBIDDEN", or "NOT_FOUND".
     """
     from app.models.folder import Folder
-    from app.models.permission import FolderPermission, RoleEnum
+    from app.models.permission import FolderPermission
 
     folder_obj = (
         db.query(Folder)
