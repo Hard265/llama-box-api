@@ -5,7 +5,7 @@ from typing import Optional
 import aiofiles
 import magic
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.orm import joinedload, Session, selectinload
 from strawberry.file_uploads import Upload
 from app.models.file import File
 from app.models.permission import FilePermission, FolderPermission, RoleEnum
@@ -120,6 +120,11 @@ def get_user_file(db: Session, user_id: UUID, id: UUID):
     """
     query = (
         db.query(File)
+        .options(
+            joinedload(File.folder),
+            selectinload(File.permissions),
+            selectinload(File.links),
+        )
         .join(FilePermission)
         .filter(FilePermission.user_id == user_id, File.id == id)
         .first()
@@ -137,7 +142,14 @@ def get_user_files(db: Session, user_id: UUID, folder_id: Optional[UUID] = None)
         parent_id: None for root folders, UUID string for subfolders
     """
     query = (
-        db.query(File).join(FilePermission).filter(FilePermission.user_id == user_id)
+        db.query(File)
+        .options(
+            selectinload(File.folder),
+            selectinload(File.permissions),
+            selectinload(File.links),
+        )
+        .join(FilePermission)
+        .filter(FilePermission.user_id == user_id)
     )
 
     return (
