@@ -31,12 +31,12 @@ class FilePermissionQueries:
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
-            permission = get_file_permission_by_id(
+            permission, error = get_file_permission_by_id(
                 db, UUID(user.sub), permission_id
             )
-            if not permission:
+            if error:
                 raise StrawberryGraphQLError(
-                    message="Permission does not exist", extensions={"code": "NOT_FOUND"}
+                    message="Permission does not exist", extensions={"code": error}
                 )
             return permission
         finally:
@@ -56,9 +56,13 @@ class FilePermissionQueries:
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
-            permissions = get_file_permissions_by_file_id(
+            permissions, error = get_file_permissions_by_file_id(
                 db, UUID(user.sub), file_uuid
             )
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Unable to retrieve permissions", extensions={"code": error}
+                )
             return permissions
         finally:
             db.close()
@@ -68,7 +72,11 @@ class FilePermissionQueries:
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
-            permissions = get_all_file_permissions(db, UUID(user.sub))
+            permissions, error = get_all_file_permissions(db, UUID(user.sub))
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Unable to retrieve permissions", extensions={"code": error}
+                )
             return permissions
         finally:
             db.close()
@@ -88,12 +96,12 @@ class FolderPermissionQueries:
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
-            permission = get_folder_permission_by_id(
+            permission, error = get_folder_permission_by_id(
                 db, UUID(user.sub), permission_id
             )
-            if not permission:
+            if error:
                 raise StrawberryGraphQLError(
-                    message="Permission does not exist", extensions={"code": "NOT_FOUND"}
+                    message="Permission does not exist", extensions={"code": error}
                 )
             return permission
         finally:
@@ -113,9 +121,13 @@ class FolderPermissionQueries:
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
-            permissions = get_folder_permissions_by_folder_id(
+            permissions, error = get_folder_permissions_by_folder_id(
                 db, UUID(user.sub), folder_uuid
             )
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Unable to retrieve permissions", extensions={"code": error}
+                )
             return permissions
         finally:
             db.close()
@@ -125,7 +137,11 @@ class FolderPermissionQueries:
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
-            permissions = get_all_folder_permissions(db, UUID(user.sub))
+            permissions, error = get_all_folder_permissions(db, UUID(user.sub))
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Unable to retrieve permissions", extensions={"code": error}
+                )
             return permissions
         finally:
             db.close()

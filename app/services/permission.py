@@ -306,10 +306,10 @@ def get_file_permission_by_id(db: Session, user_id: UUID, permission_id: UUID):
             .one_or_none()
         )
         if not permission:
-            raise SQLAlchemyError
-        return permission
+            return None, "NOT_FOUND"
+        return permission, None
     except SQLAlchemyError:
-        return None
+        return None, "INTERNAL_ERROR"
 
 
 def get_file_permissions_by_file_id(db: Session, user_id: UUID, file_id: UUID):
@@ -325,9 +325,9 @@ def get_file_permissions_by_file_id(db: Session, user_id: UUID, file_id: UUID):
             )
             .all()
         )
-        return permissions
+        return permissions, None
     except SQLAlchemyError:
-        return None
+        return None, "INTERNAL_ERROR"
 
 
 def get_all_file_permissions(db: Session, user_id: UUID):
@@ -340,9 +340,9 @@ def get_all_file_permissions(db: Session, user_id: UUID):
             .filter(FilePermission.user_id == user_id)
             .all()
         )
-        return permissions
+        return permissions, None
     except SQLAlchemyError:
-        return None
+        return None, "INTERNAL_ERROR"
 
 
 def get_folder_permission_by_id(db: Session, user_id: UUID, permission_id: UUID):
@@ -360,10 +360,10 @@ def get_folder_permission_by_id(db: Session, user_id: UUID, permission_id: UUID)
             .one_or_none()
         )
         if not permission:
-            raise SQLAlchemyError
-        return permission
+            return None, "NOT_FOUND"
+        return permission, None
     except SQLAlchemyError:
-        return None
+        return None, "INTERNAL_ERROR"
 
 
 def get_folder_permissions_by_folder_id(db: Session, user_id: UUID, folder_id: UUID):
@@ -380,9 +380,9 @@ def get_folder_permissions_by_folder_id(db: Session, user_id: UUID, folder_id: U
             )
             .all()
         )
-        return permissions
+        return permissions, None
     except SQLAlchemyError:
-        return None
+        return None, "INTERNAL_ERROR"
 
 
 def get_all_folder_permissions(db: Session, user_id: UUID):
@@ -396,8 +396,8 @@ def get_all_folder_permissions(db: Session, user_id: UUID):
             .filter(FolderPermission.user_id == user_id)
             .all()
         )
-        return permissions
+        return permissions, None
     except SQLAlchemyError:
-        return None
+        return None, "INTERNAL_ERROR"
 
 
