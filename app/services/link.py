@@ -33,6 +33,50 @@ def get_link(db: Session, token: str):
     return link
 
 
+def get_links_by_file_id(db: Session, user_id: UUID, file_id: UUID):
+    # Check if the user has permission to access the file
+    file_permission = (
+        db.query(FilePermission)
+        .filter(
+            FilePermission.file_id == file_id,
+            FilePermission.user_id == user_id,
+        )
+        .first()
+    )
+    if not file_permission:
+        return None, "PERMISSION_DENIED"
+
+    links = (
+        db.query(Link)
+        .options(joinedload(Link.user), joinedload(Link.folder), joinedload(Link.file))
+        .filter(Link.file_id == file_id)
+        .all()
+    )
+    return links, None
+
+
+def get_links_by_folder_id(db: Session, user_id: UUID, folder_id: UUID):
+    # Check if the user has permission to access the folder
+    folder_permission = (
+        db.query(FolderPermission)
+        .filter(
+            FolderPermission.folder_id == folder_id,
+            FolderPermission.user_id == user_id,
+        )
+        .first()
+    )
+    if not folder_permission:
+        return None, "PERMISSION_DENIED"
+
+    links = (
+        db.query(Link)
+        .options(joinedload(Link.user), joinedload(Link.folder), joinedload(Link.file))
+        .filter(Link.folder_id == folder_id)
+        .all()
+    )
+    return links, None
+
+
 def create_link(db: Session, data: LinkCreate, user_id: UUID):
     if data.file_id:
         target = (

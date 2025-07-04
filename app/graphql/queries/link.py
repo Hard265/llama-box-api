@@ -5,7 +5,13 @@ import strawberry
 from strawberry.exceptions import StrawberryGraphQLError
 from app.database import get_db
 from app.graphql.types import LinkType
-from app.services.link import get_user_link, get_user_links, get_link
+from app.services.link import (
+    get_user_link,
+    get_user_links,
+    get_link,
+    get_links_by_file_id,
+    get_links_by_folder_id,
+)
 
 
 @strawberry.type
@@ -80,6 +86,68 @@ class LinkQueries:
             db.rollback()
             raise StrawberryGraphQLError(
                 "Database error occurred while retrieving link by token",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
+        finally:
+            db.close()
+
+    @strawberry.field
+    def get_by_file(
+        self, info: strawberry.Info, file_id: str
+    ) -> Sequence[LinkType]:
+        user = info.context.get("user")
+        try:
+            file_uuid = UUID(file_id)
+        except ValueError as exc:
+            raise StrawberryGraphQLError(
+                message="Invalid file ID format", extensions={"code": "BAD_INPUT"}
+            ) from exc
+
+        db = next(get_db())
+        try:
+            links, error = get_links_by_file_id(
+                db=db, user_id=UUID(user.sub), file_id=file_uuid
+            )
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Could not retrieve links", extensions={"code": error}
+                )
+            return links
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                "Database error occurred while retrieving links",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
+        finally:
+            db.close()
+
+    @strawberry.field
+    def get_by_folder(
+        self, info: strawberry.Info, folder_id: str
+    ) -> Sequence[LinkType]:
+        user = info.context.get("user")
+        try:
+            folder_uuid = UUID(folder_id)
+        except ValueError as exc:
+            raise StrawberryGraphQLError(
+                message="Invalid folder ID format", extensions={"code": "BAD_INPUT"}
+            ) from exc
+
+        db = next(get_db())
+        try:
+            links, error = get_links_by_folder_id(
+                db=db, user_id=UUID(user.sub), folder_id=folder_uuid
+            )
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Could not retrieve links", extensions={"code": error}
+                )
+            return links
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                "Database error occurred while retrieving links",
                 extensions={"code": "INTERNAL_ERROR"},
             )
         finally:
