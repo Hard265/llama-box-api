@@ -19,6 +19,10 @@ def get_folder(db: Session, user_id: UUID, id: UUID):
         .filter(FolderPermission.user_id == user_id, Folder.id == id)
         .first()
     )
+    _ = query.files
+    _ = query.folders
+    _ = query.permissions
+    _ = query.links
     return query
 
 
@@ -69,6 +73,7 @@ def create_folder(db: Session, folder_data: FolderCreate, user_id: UUID):
         db.refresh(folder)
         db.refresh(permission)
         _ = folder.files
+        _ = folder.folders
         return folder, None
     except IntegrityError:
         db.rollback()

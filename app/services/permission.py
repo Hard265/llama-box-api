@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.schemas.permission import (
@@ -290,5 +290,114 @@ def delete_file_permission(db: Session, user_id: UUID, permission_id: UUID):
     except SQLAlchemyError:
         db.rollback()
         return False, "INTERNAL_ERROR"
+
+
+def get_file_permission_by_id(db: Session, user_id: UUID, permission_id: UUID):
+    try:
+        permission = (
+            db.query(FilePermission)
+            .options(
+                joinedload(FilePermission.file), joinedload(FilePermission.user)
+            )
+            .filter(
+                FilePermission.id == permission_id,
+                FilePermission.user_id == user_id,
+            )
+            .one_or_none()
+        )
+        if not permission:
+            raise SQLAlchemyError
+        return permission
+    except SQLAlchemyError:
+        return None
+
+
+def get_file_permissions_by_file_id(db: Session, user_id: UUID, file_id: UUID):
+    try:
+        permissions = (
+            db.query(FilePermission)
+            .options(
+                joinedload(FilePermission.file), joinedload(FilePermission.user)
+            )
+            .filter(
+                FilePermission.file_id == file_id,
+                FilePermission.user_id == user_id,
+            )
+            .all()
+        )
+        return permissions
+    except SQLAlchemyError:
+        return None
+
+
+def get_all_file_permissions(db: Session, user_id: UUID):
+    try:
+        permissions = (
+            db.query(FilePermission)
+            .options(
+                joinedload(FilePermission.file), joinedload(FilePermission.user)
+            )
+            .filter(FilePermission.user_id == user_id)
+            .all()
+        )
+        return permissions
+    except SQLAlchemyError:
+        return None
+
+
+def get_folder_permission_by_id(db: Session, user_id: UUID, permission_id: UUID):
+    try:
+        permission = (
+            db.query(FolderPermission)
+            .options(
+                joinedload(FolderPermission.folder),
+                joinedload(FolderPermission.user),
+            )
+            .filter(
+                FolderPermission.id == permission_id,
+                FolderPermission.user_id == user_id,
+            )
+            .one_or_none()
+        )
+        if not permission:
+            raise SQLAlchemyError
+        return permission
+    except SQLAlchemyError:
+        return None
+
+
+def get_folder_permissions_by_folder_id(db: Session, user_id: UUID, folder_id: UUID):
+    try:
+        permissions = (
+            db.query(FolderPermission)
+            .options(
+                joinedload(FolderPermission.folder),
+                joinedload(FolderPermission.user),
+            )
+            .filter(
+                FolderPermission.folder_id == folder_id,
+                FolderPermission.user_id == user_id,
+            )
+            .all()
+        )
+        return permissions
+    except SQLAlchemyError:
+        return None
+
+
+def get_all_folder_permissions(db: Session, user_id: UUID):
+    try:
+        permissions = (
+            db.query(FolderPermission)
+            .options(
+                joinedload(FolderPermission.folder),
+                joinedload(FolderPermission.user),
+            )
+            .filter(FolderPermission.user_id == user_id)
+            .all()
+        )
+        return permissions
+    except SQLAlchemyError:
+        return None
 
 

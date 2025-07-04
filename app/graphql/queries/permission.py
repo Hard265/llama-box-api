@@ -1,14 +1,20 @@
 from typing import Optional, Sequence
 from uuid import UUID
 
-from sqlalchemy.exc import SQLAlchemyError
 import strawberry
 from strawberry.exceptions import StrawberryGraphQLError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.graphql.types import FilePermissionType, FolderPermissionType
-from app.models.permission import FilePermission, FolderPermission
+from app.services.permission import (
+    get_all_file_permissions,
+    get_all_folder_permissions,
+    get_file_permission_by_id,
+    get_file_permissions_by_file_id,
+    get_folder_permission_by_id,
+    get_folder_permissions_by_folder_id,
+)
 
 
 @strawberry.type
@@ -23,30 +29,16 @@ class FilePermissionQueries:
             )
 
         user = info.context.get("user")
-        db = next(get_db())
+        db: Session = next(get_db())
         try:
-            permission = (
-                db.query(FilePermission)
-                .options(
-                    joinedload(FilePermission.file), joinedload(FilePermission.user)
-                )
-                .filter(
-                    FilePermission.id == permission_id,
-                    FilePermission.user_id == UUID(user.sub),
-                )
-                .one_or_none()
+            permission = get_file_permission_by_id(
+                db, UUID(user.sub), permission_id
             )
             if not permission:
                 raise StrawberryGraphQLError(
                     message="Permission does not exist", extensions={"code": "NOT_FOUND"}
                 )
             return permission
-        except SQLAlchemyError:
-            db.rollback()
-            raise StrawberryGraphQLError(
-                message="Database error occurred while retrieving file permission",
-                extensions={"code": "INTERNAL_ERROR"},
-            )
         finally:
             db.close()
 
@@ -62,48 +54,22 @@ class FilePermissionQueries:
             )
 
         user = info.context.get("user")
-        db = next(get_db())
+        db: Session = next(get_db())
         try:
-            permissions = (
-                db.query(FilePermission)
-                .options(
-                    joinedload(FilePermission.file), joinedload(FilePermission.user)
-                )
-                .filter(
-                    FilePermission.file_id == file_uuid,
-                    FilePermission.user_id == UUID(user.sub),
-                )
-                .all()
+            permissions = get_file_permissions_by_file_id(
+                db, UUID(user.sub), file_uuid
             )
             return permissions
-        except SQLAlchemyError:
-            db.rollback()
-            raise StrawberryGraphQLError(
-                message="Database error occurred while retrieving file permissions",
-                extensions={"code": "INTERNAL_ERROR"},
-            )
         finally:
             db.close()
 
     @strawberry.field
-    def getAll(self, info: strawberry.Info) -> Sequence[FilePermissionType]:
+    def get_all(self, info: strawberry.Info) -> Sequence[FilePermissionType]:
         user = info.context.get("user")
-        db = next(get_db())
+        db: Session = next(get_db())
         try:
-            permissions = (
-                db.query(FilePermission)
-                .options(
-                    joinedload(FilePermission.file), joinedload(FilePermission.user)
-                )
-                .filter(FilePermission.user_id == UUID(user.sub))
-            )
-            return list(permissions)
-        except SQLAlchemyError:
-            db.rollback()
-            raise StrawberryGraphQLError(
-                message="Database error occurred while retrieving file permissions",
-                extensions={"code": "INTERNAL_ERROR"},
-            )
+            permissions = get_all_file_permissions(db, UUID(user.sub))
+            return permissions
         finally:
             db.close()
 
@@ -120,31 +86,16 @@ class FolderPermissionQueries:
             )
 
         user = info.context.get("user")
-        db = next(get_db())
+        db: Session = next(get_db())
         try:
-            permission = (
-                db.query(FolderPermission)
-                .options(
-                    joinedload(FolderPermission.folder),
-                    joinedload(FolderPermission.user),
-                )
-                .filter(
-                    FolderPermission.id == permission_id,
-                    FolderPermission.user_id == UUID(user.sub),
-                )
-                .one_or_none()
+            permission = get_folder_permission_by_id(
+                db, UUID(user.sub), permission_id
             )
             if not permission:
                 raise StrawberryGraphQLError(
                     message="Permission does not exist", extensions={"code": "NOT_FOUND"}
                 )
             return permission
-        except SQLAlchemyError:
-            db.rollback()
-            raise StrawberryGraphQLError(
-                message="Database error occurred while retrieving folder permission",
-                extensions={"code": "INTERNAL_ERROR"},
-            )
         finally:
             db.close()
 
@@ -160,49 +111,21 @@ class FolderPermissionQueries:
             )
 
         user = info.context.get("user")
-        db = next(get_db())
+        db: Session = next(get_db())
         try:
-            permissions = (
-                db.query(FolderPermission)
-                .options(
-                    joinedload(FolderPermission.folder),
-                    joinedload(FolderPermission.user),
-                )
-                .filter(
-                    FolderPermission.folder_id == folder_uuid,
-                    FolderPermission.user_id == UUID(user.sub),
-                )
-                .all()
+            permissions = get_folder_permissions_by_folder_id(
+                db, UUID(user.sub), folder_uuid
             )
             return permissions
-        except SQLAlchemyError:
-            db.rollback()
-            raise StrawberryGraphQLError(
-                message="Database error occurred while retrieving folder permissions",
-                extensions={"code": "INTERNAL_ERROR"},
-            )
         finally:
             db.close()
 
     @strawberry.field
-    def getAll(self, info: strawberry.Info) -> Sequence[FolderPermissionType]:
+    def get_all(self, info: strawberry.Info) -> Sequence[FolderPermissionType]:
         user = info.context.get("user")
-        db = next(get_db())
+        db: Session = next(get_db())
         try:
-            permissions = (
-                db.query(FolderPermission)
-                .options(
-                    joinedload(FolderPermission.folder),
-                    joinedload(FolderPermission.user),
-                )
-                .filter(FolderPermission.user_id == UUID(user.sub))
-            )
-            return list(permissions)
-        except SQLAlchemyError:
-            db.rollback()
-            raise StrawberryGraphQLError(
-                message="Database error occurred while retrieving folder permissions",
-                extensions={"code": "INTERNAL_ERROR"},
-            )
+            permissions = get_all_folder_permissions(db, UUID(user.sub))
+            return permissions
         finally:
             db.close()
