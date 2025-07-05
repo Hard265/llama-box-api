@@ -6,7 +6,6 @@ from app.database import Base
 import os
 
 # Import all models to ensure they are registered with SQLAlchemy's Base
-from app.models import user, file, folder, link, permission
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 
@@ -20,7 +19,7 @@ def db_engine():
 @pytest.fixture(scope="function")
 def db_session(db_engine):
     connection = db_engine.connect()
-    transaction = connection.begin()
+    connection.begin()
     session = sessionmaker(autocommit=False, autoflush=False, bind=connection)()
     yield session
     session.rollback()
