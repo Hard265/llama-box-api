@@ -80,6 +80,8 @@ def create_folder(db: Session, folder_data: FolderCreate, user_id: UUID):
         db.commit()
         db.refresh(folder)
         db.refresh(permission)
+        _ = folder.files
+        _ = folder.folders
         return folder, None
     except IntegrityError:
         db.rollback()
@@ -127,7 +129,7 @@ def update_folder(db: Session, user_id: UUID, folder_update_schema, input_data):
         else:
             return None, "NOT_FOUND"
 
-    for field in folder_update_schema.model_fields:
+    for field in folder_update_schema.__class__.model_fields:
         if field == "id":
             continue
         if field in input_data.__dict__:

@@ -33,18 +33,12 @@ class LinkQueries:
             db.close()
 
     @strawberry.field
-    def get(self, info: strawberry.Info, id: str) -> Optional[LinkType]:
+    def get(self, info: strawberry.Info, id: UUID) -> Optional[LinkType]:
         user = info.context.get("user")
-        try:
-            link_id = UUID(id)
-        except ValueError as exc:
-            raise StrawberryGraphQLError(
-                message="Invalid Link id format", extensions={"code": "BAD_INPUT"}
-            ) from exc
 
         db = next(get_db())
         try:
-            link = get_user_link(db=db, user_id=UUID(user.sub), id=link_id)
+            link = get_user_link(db=db, user_id=UUID(user.sub), id=id)
             if not link:
                 raise StrawberryGraphQLError(
                     message="Link does not exist", extensions={"code": "NOT_FOUND"}
@@ -92,25 +86,21 @@ class LinkQueries:
             db.close()
 
     @strawberry.field
-    def get_by_file(
-        self, info: strawberry.Info, file_id: str
-    ) -> Sequence[LinkType]:
+    def get_by_file(self, info: strawberry.Info, file_id: UUID) -> Sequence[LinkType]:
         user = info.context.get("user")
-        try:
-            file_uuid = UUID(file_id)
-        except ValueError as exc:
-            raise StrawberryGraphQLError(
-                message="Invalid file ID format", extensions={"code": "BAD_INPUT"}
-            ) from exc
-
         db = next(get_db())
         try:
             links, error = get_links_by_file_id(
-                db=db, user_id=UUID(user.sub), file_id=file_uuid
+                db=db, user_id=UUID(user.sub), file_id=file_id
             )
             if error:
                 raise StrawberryGraphQLError(
                     message="Could not retrieve links", extensions={"code": error}
+                )
+            if not links:
+                raise StrawberryGraphQLError(
+                    message="Could not retrieve links",
+                    extensions={"code": "INTERNAL_ERROR"},
                 )
             return links
         except SQLAlchemyError:
@@ -124,25 +114,25 @@ class LinkQueries:
 
     @strawberry.field
     def get_by_folder(
-        self, info: strawberry.Info, folder_id: str
+        self, info: strawberry.Info, folder_id: UUID
     ) -> Sequence[LinkType]:
         user = info.context.get("user")
-        try:
-            folder_uuid = UUID(folder_id)
-        except ValueError as exc:
-            raise StrawberryGraphQLError(
-                message="Invalid folder ID format", extensions={"code": "BAD_INPUT"}
-            ) from exc
 
         db = next(get_db())
         try:
             links, error = get_links_by_folder_id(
-                db=db, user_id=UUID(user.sub), folder_id=folder_uuid
+                db=db, user_id=UUID(user.sub), folder_id=folder_id
             )
             if error:
                 raise StrawberryGraphQLError(
                     message="Could not retrieve links", extensions={"code": error}
                 )
+            if not links:
+                raise StrawberryGraphQLError(
+                    message="Could not retrieve links",
+                    extensions={"code": "INTERNAL_ERROR"},
+                )
+
             return links
         except SQLAlchemyError:
             db.rollback()

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class FolderBase(BaseModel):
     name: str = Field(..., max_length=255)
@@ -21,8 +21,7 @@ class FolderOut(FolderBase):
     updated_at: Optional[datetime]
     folders: List["FolderOut"] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 FolderOut.model_rebuild()
 

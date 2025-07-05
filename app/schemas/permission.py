@@ -13,7 +13,6 @@ class CreateFolderPermission(BaseModel):
     role: Role
 
 class UpdateFolderPermission(BaseModel):
-    id: UUID
     permission_id: UUID
     role: Role
 

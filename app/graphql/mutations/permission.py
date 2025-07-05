@@ -32,7 +32,6 @@ class CreateFolderPermissionInput:
 
 @strawberry.input
 class UpdateFolderPermissionInput:
-    id: UUID
     permission_id: UUID
     role: Role
 

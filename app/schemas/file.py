@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from typing import Optional
 
@@ -19,5 +19,4 @@ class FileOut(BaseModel):
     created_at: str  # ISO format string
     updated_at: str  # ISO format string
 
-    class Config:
-        model_attributes = True  
+    model_config = ConfigDict(from_attributes=True)  

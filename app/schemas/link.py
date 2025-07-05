@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from pydantic import BaseModel, UUID4, model_validator
+from pydantic import BaseModel, UUID4, model_validator, ConfigDict
 from typing import Optional
 
 
@@ -34,5 +34,4 @@ class LinkOut(BaseModel):
     expires_at: Optional[datetime]
     permission: LinkPermission
 
-    class Config:
-        model_attributes = True
+    model_config = ConfigDict(from_attributes=True)

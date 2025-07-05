@@ -20,20 +20,11 @@ from app.services.permission import (
 @strawberry.type
 class FilePermissionQueries:
     @strawberry.field
-    def get(self, info: strawberry.Info, id: str) -> Optional[FilePermissionType]:
-        try:
-            permission_id = UUID(id)
-        except ValueError:
-            raise StrawberryGraphQLError(
-                message="Invalid permission ID format", extensions={"code": "BAD_INPUT"}
-            )
-
+    def get(self, info: strawberry.Info, id: UUID) -> Optional[FilePermissionType]:
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
-            permission, error = get_file_permission_by_id(
-                db, UUID(user.sub), permission_id
-            )
+            permission, error = get_file_permission_by_id(db, UUID(user.sub), id)
             if error:
                 raise StrawberryGraphQLError(
                     message="Permission does not exist", extensions={"code": error}
@@ -44,24 +35,23 @@ class FilePermissionQueries:
 
     @strawberry.field
     def get_by_file(
-        self, info: strawberry.Info, file_id: str
+        self, info: strawberry.Info, file_id: UUID
     ) -> Sequence[FilePermissionType]:
-        try:
-            file_uuid = UUID(file_id)
-        except ValueError:
-            raise StrawberryGraphQLError(
-                message="Invalid file ID format", extensions={"code": "BAD_INPUT"}
-            )
 
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
             permissions, error = get_file_permissions_by_file_id(
-                db, UUID(user.sub), file_uuid
+                db, UUID(user.sub), file_id
             )
             if error:
                 raise StrawberryGraphQLError(
                     message="Unable to retrieve permissions", extensions={"code": error}
+                )
+            if not permissions:
+                raise StrawberryGraphQLError(
+                    message="Unable to process the request",
+                    extensions={"code": "INTERNAL_ERROR"},
                 )
             return permissions
         finally:
@@ -77,6 +67,11 @@ class FilePermissionQueries:
                 raise StrawberryGraphQLError(
                     message="Unable to retrieve permissions", extensions={"code": error}
                 )
+            if not permissions:
+                raise StrawberryGraphQLError(
+                    message="Unable to process the request",
+                    extensions={"code": "INTERNAL_ERROR"},
+                )
             return permissions
         finally:
             db.close()
@@ -85,20 +80,12 @@ class FilePermissionQueries:
 @strawberry.type
 class FolderPermissionQueries:
     @strawberry.field
-    def get(self, info: strawberry.Info, id: str) -> Optional[FolderPermissionType]:
-        try:
-            permission_id = UUID(id)
-        except ValueError:
-            raise StrawberryGraphQLError(
-                message="Invalid permission ID format", extensions={"code": "BAD_INPUT"}
-            )
+    def get(self, info: strawberry.Info, id: UUID) -> Optional[FolderPermissionType]:
 
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
-            permission, error = get_folder_permission_by_id(
-                db, UUID(user.sub), permission_id
-            )
+            permission, error = get_folder_permission_by_id(db, UUID(user.sub), id)
             if error:
                 raise StrawberryGraphQLError(
                     message="Permission does not exist", extensions={"code": error}
@@ -109,24 +96,23 @@ class FolderPermissionQueries:
 
     @strawberry.field
     def get_by_folder(
-        self, info: strawberry.Info, folder_id: str
+        self, info: strawberry.Info, folder_id: UUID
     ) -> Sequence[FolderPermissionType]:
-        try:
-            folder_uuid = UUID(folder_id)
-        except ValueError:
-            raise StrawberryGraphQLError(
-                message="Invalid folder ID format", extensions={"code": "BAD_INPUT"}
-            )
 
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
             permissions, error = get_folder_permissions_by_folder_id(
-                db, UUID(user.sub), folder_uuid
+                db, UUID(user.sub), folder_id
             )
             if error:
                 raise StrawberryGraphQLError(
                     message="Unable to retrieve permissions", extensions={"code": error}
+                )
+            if not permissions:
+                raise StrawberryGraphQLError(
+                    message="Unable to process the request",
+                    extensions={"code": "INTERNAL_ERROR"},
                 )
             return permissions
         finally:
@@ -141,6 +127,11 @@ class FolderPermissionQueries:
             if error:
                 raise StrawberryGraphQLError(
                     message="Unable to retrieve permissions", extensions={"code": error}
+                )
+            if not permissions:
+                raise StrawberryGraphQLError(
+                    message="Unable to process the request",
+                    extensions={"code": "INTERNAL_ERROR"},
                 )
             return permissions
         finally:

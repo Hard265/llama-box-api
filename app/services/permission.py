@@ -41,7 +41,7 @@ def create_folder_permission(db: Session, user_id: UUID, data: CreateFolderPermi
         return None, "FORBIDDEN"
 
     # Get the target user
-    target_user = get_user_by_email(db, data.email)
+    target_user = get_user_by_email(data.email, db)
     if not target_user:
         return None, "NOT_FOUND"
 
@@ -56,6 +56,8 @@ def create_folder_permission(db: Session, user_id: UUID, data: CreateFolderPermi
         db.add(new_permission)
         db.commit()
         db.refresh(new_permission)
+        _ = new_permission.user
+        _ = new_permission.folder
         return new_permission, None
     except IntegrityError:
         db.rollback()
@@ -79,11 +81,19 @@ def update_folder_permission(db: Session, user_id: UUID, data: UpdateFolderPermi
         if an error occurred.
     """
 
+    permission = (
+        db.query(FolderPermission)
+        .filter(FolderPermission.id == data.permission_id)
+        .first()
+    )
+    if not permission:
+        return None, "NOT_FOUND"
+
     # Check if the user has owner permission to the specified folder
     owner_permission = (
         db.query(FolderPermission)
         .filter(
-            FolderPermission.folder_id == data.id,
+            FolderPermission.folder_id == permission.folder_id,
             FolderPermission.user_id == user_id,
             FolderPermission.role == RoleEnum.owner,
         )
@@ -93,18 +103,13 @@ def update_folder_permission(db: Session, user_id: UUID, data: UpdateFolderPermi
     if not owner_permission:
         return None, "FORBIDDEN"
 
-    permission = (
-        db.query(FolderPermission).filter(FolderPermission.id == data.permission_id).first()
-    )
-    if not permission:
-        return None, "NOT_FOUND"
-
     permission.role = data.role.value
 
     try:
         db.add(permission)
         db.commit()
         db.refresh(permission)
+        _ = permission.user
         return permission, None
     except SQLAlchemyError:
         db.rollback()
@@ -235,7 +240,9 @@ def update_file_permission(db: Session, user_id: UUID, data: UpdateFilePermissio
     if not owner_permission:
         return None, "FORBIDDEN"
 
-    permission = db.query(FilePermission).filter(FilePermission.id == data.permission_id).first()
+    permission = (
+        db.query(FilePermission).filter(FilePermission.id == data.permission_id).first()
+    )
     if not permission:
         return None, "NOT_FOUND"
 
@@ -265,7 +272,9 @@ def delete_file_permission(db: Session, user_id: UUID, permission_id: UUID):
         if an error occurred.
     """
 
-    permission = db.query(FilePermission).filter(FilePermission.id == permission_id).first()
+    permission = (
+        db.query(FilePermission).filter(FilePermission.id == permission_id).first()
+    )
     if not permission:
         return False, "NOT_FOUND"
 
@@ -296,9 +305,7 @@ def get_file_permission_by_id(db: Session, user_id: UUID, permission_id: UUID):
     try:
         permission = (
             db.query(FilePermission)
-            .options(
-                joinedload(FilePermission.file), joinedload(FilePermission.user)
-            )
+            .options(joinedload(FilePermission.file), joinedload(FilePermission.user))
             .filter(
                 FilePermission.id == permission_id,
                 FilePermission.user_id == user_id,
@@ -316,9 +323,7 @@ def get_file_permissions_by_file_id(db: Session, user_id: UUID, file_id: UUID):
     try:
         permissions = (
             db.query(FilePermission)
-            .options(
-                joinedload(FilePermission.file), joinedload(FilePermission.user)
-            )
+            .options(joinedload(FilePermission.file), joinedload(FilePermission.user))
             .filter(
                 FilePermission.file_id == file_id,
                 FilePermission.user_id == user_id,
@@ -334,9 +339,7 @@ def get_all_file_permissions(db: Session, user_id: UUID):
     try:
         permissions = (
             db.query(FilePermission)
-            .options(
-                joinedload(FilePermission.file), joinedload(FilePermission.user)
-            )
+            .options(joinedload(FilePermission.file), joinedload(FilePermission.user))
             .filter(FilePermission.user_id == user_id)
             .all()
         )
@@ -368,18 +371,32 @@ def get_folder_permission_by_id(db: Session, user_id: UUID, permission_id: UUID)
 
 def get_folder_permissions_by_folder_id(db: Session, user_id: UUID, folder_id: UUID):
     try:
-        permissions = (
+        # Check if the user has owner permission to the specified folder
+        owner_permission = (
             db.query(FolderPermission)
-            .options(
-                joinedload(FolderPermission.folder),
-                joinedload(FolderPermission.user),
-            )
             .filter(
                 FolderPermission.folder_id == folder_id,
                 FolderPermission.user_id == user_id,
+                FolderPermission.role == RoleEnum.owner,
             )
-            .all()
+            .first()
         )
+
+        query = db.query(FolderPermission).options(
+            joinedload(FolderPermission.folder),
+            joinedload(FolderPermission.user),
+        )
+
+        if owner_permission:
+            # If the user is an owner, return all permissions for the folder
+            permissions = query.filter(FolderPermission.folder_id == folder_id).all()
+        else:
+            # Otherwise, only return the user's permissions for the folder
+            permissions = query.filter(
+                FolderPermission.folder_id == folder_id,
+                FolderPermission.user_id == user_id,
+            ).all()
+
         return permissions, None
     except SQLAlchemyError:
         return None, "INTERNAL_ERROR"
@@ -399,5 +416,3 @@ def get_all_folder_permissions(db: Session, user_id: UUID):
         return permissions, None
     except SQLAlchemyError:
         return None, "INTERNAL_ERROR"
-
-
