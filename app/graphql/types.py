@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 import enum
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from uuid import UUID
 
 import strawberry
@@ -31,7 +31,7 @@ class FolderType:
     permissions: List[FolderPermissionType]
     parent: Optional["FolderType"]
     owner: UserType
-    path: List[PathItemType]
+    path: List[Tuple[UUID, str]]
 
 
 @strawberry.type
@@ -98,7 +98,18 @@ class FolderCreationInput:
 @strawberry.input
 class FolderUpdateInput:
     name: Optional[str] = None
-    parent_id: Optional[UUID] = None
+    starred: Optional[bool] = None
+
+
+@strawberry.input
+class FolderCopyInput:
+    source_ids: List[UUID]
+    destination_parent_id: Optional[UUID] = None
+
+
+@strawberry.type
+class FolderCopyResponse:
+    folders: List[FolderType]
 
 
 @strawberry.type
@@ -112,8 +123,30 @@ class DeleteResponse:
 @strawberry.input
 class FileUpdateInput:
     name: Optional[str] = None
-    folder_id: Optional[UUID] = None
     starred: Optional[bool] = None
+
+
+@strawberry.input
+class FileCopyInput:
+    source_ids: List[UUID]
+    destination_folder_id: UUID
+
+
+@strawberry.input
+class FolderMoveInput:
+    source_ids: List[UUID]
+    destination_folder_id: UUID
+
+
+@strawberry.input
+class FileMoveInput:
+    source_ids: List[UUID]
+    destination_folder_id: UUID
+
+
+@strawberry.type
+class FileCopyResponse:
+    files: List[FileType]
 
 
 @strawberry.enum

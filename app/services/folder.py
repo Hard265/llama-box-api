@@ -91,7 +91,7 @@ def create_folder(db: Session, folder_data: FolderCreate, user_id: UUID):
         return None, "INTERNAL_ERROR"
 
 
-def update_folder(db: Session, user_id: UUID, folder_update_schema, input_data):
+def update_folder(db: Session, user_id: UUID, folder_update_schema):
     """
     Update a folder if the user has owner or editor permission.
     Returns the updated folder or raises an appropriate exception.
@@ -129,11 +129,10 @@ def update_folder(db: Session, user_id: UUID, folder_update_schema, input_data):
         else:
             return None, "NOT_FOUND"
 
-    for field in folder_update_schema.__class__.model_fields:
-        if field == "id":
-            continue
-        if field in input_data.__dict__:
-            setattr(folder, field, getattr(folder_update_schema, field, None))
+    if folder_update_schema.name is not None:
+        folder.name = folder_update_schema.name
+    if folder_update_schema.starred is not None:
+        folder.starred = folder_update_schema.starred
 
     db.commit()
     db.refresh(folder)

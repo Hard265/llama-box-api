@@ -9,6 +9,7 @@ from strawberry.exceptions import StrawberryGraphQLError
 from app.database import get_db
 from app.graphql.types import FolderType
 from app.services.folder import get_folder, get_folders
+from app.utils.helpers import get_folder_path_cte
 
 
 @strawberry.type
@@ -18,13 +19,26 @@ class FolderQueries:
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
+            print(get_folder_path_cte(db, id))
             folder = get_folder(db=db, user_id=UUID(user.sub), id=id)
             if not folder:
                 raise StrawberryGraphQLError(
                     message="Folder does not exist",
                     extensions={"code": "NOT_FOUND"},
                 )
-            return folder
+            return FolderType(
+                id=folder.id,
+                name=folder.name,
+                created_at=folder.created_at,
+                updated_at=folder.updated_at,
+                folders=folder.folders,
+                files=folder.files,
+                links=folder.links,
+                permissions=folder.permissions,
+                parent=folder.parent,
+                owner=folder.owner,
+                path=get_folder_path_cte(db, id),
+            )
         except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(

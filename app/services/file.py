@@ -164,7 +164,6 @@ def update_file(
     user_id: UUID,
     file_id: UUID,
     name: Optional[str] = None,
-    folder_id: Optional[UUID] = None,
 ):
     file_obj = (
         db.query(File)
@@ -180,8 +179,6 @@ def update_file(
         return None, "NOT_FOUND"
     if name is not None:
         file_obj.name = name
-    if folder_id is not None:
-        file_obj.folder_id = folder_id
     try:
         db.commit()
         db.refresh(file_obj)

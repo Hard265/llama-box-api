@@ -13,7 +13,7 @@ class FolderCreate(FolderBase):
 class FolderUpdate(BaseModel):
     id: UUID
     name: Optional[str] = Field(None, max_length=255)
-    parent_id: Optional[UUID] = None
+    starred: Optional[bool] = None
 
 class FolderOut(FolderBase):
     id: UUID

@@ -6,7 +6,12 @@ import strawberry
 from strawberry.exceptions import StrawberryGraphQLError
 
 from app.database import get_db
-from app.graphql.types import FilePermissionType, FolderPermissionType, Role
+from app.graphql.types import (
+    FilePermissionType,
+    FolderPermissionType,
+    Role,
+    DeleteResponse,
+)
 from app.services.permission import (
     create_folder_permission,
     update_folder_permission,
@@ -99,7 +104,7 @@ class FolderPermissionMutations:
             db.close()
 
     @strawberry.mutation
-    def delete(self, info: strawberry.Info, permission_id: UUID) -> bool:
+    def delete(self, info: strawberry.Info, permission_id: UUID) -> DeleteResponse:
         user = info.context.get("user")
         db = next(get_db())
         try:
@@ -110,7 +115,9 @@ class FolderPermissionMutations:
                 raise StrawberryGraphQLError(
                     message="Could not delete permission", extensions={"code": error}
                 )
-            return success
+            return DeleteResponse(
+                success=success, message="Permission deleted successfully."
+            )
         except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
@@ -197,7 +204,7 @@ class FilePermissionMutations:
             db.close()
 
     @strawberry.mutation
-    def delete(self, info: strawberry.Info, permission_id: UUID) -> bool:
+    def delete(self, info: strawberry.Info, permission_id: UUID) -> DeleteResponse:
         user = info.context.get("user")
         db = next(get_db())
         try:
@@ -208,7 +215,9 @@ class FilePermissionMutations:
                 raise StrawberryGraphQLError(
                     message="Could not delete permission", extensions={"code": error}
                 )
-            return success
+            return DeleteResponse(
+                success=success, message="Permission deleted successfully."
+            )
         except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(

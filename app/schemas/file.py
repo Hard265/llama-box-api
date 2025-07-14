@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from uuid import UUID
 from typing import Optional
 
@@ -8,15 +8,10 @@ class CreateFile(BaseModel):
     file: str
     
 class UpdateFile(BaseModel):
-    name: str
+    name: str  
 
 class FileOut(BaseModel):
     id: UUID
-    name: str
+    name: Optional[str]
     folder_id: UUID
-    size: int
-    mime_type: Optional[str] = None  # e.g., "image/png"
-    created_at: str  # ISO format string
-    updated_at: str  # ISO format string
-
-    model_config = ConfigDict(from_attributes=True)  
+    file: str

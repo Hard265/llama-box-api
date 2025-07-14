@@ -130,7 +130,7 @@ def test_update_folder(db_session: Session, setup_users):
 
     update_data = FolderUpdate(id=folder.id, name="updated_name")
     updated_folder, error = folder_service.update_folder(
-        db_session, user_id=user1.id, folder_update_schema=update_data, input_data=update_data
+        db_session, user_id=user1.id, folder_update_schema=update_data
     )
     assert error is None
     assert updated_folder is not None
@@ -146,7 +146,7 @@ def test_update_folder_no_permission(db_session: Session, setup_users):
 
     update_data = FolderUpdate(id=folder.id, name="updated_name")
     updated_folder, error = folder_service.update_folder(
-        db_session, user_id=user2.id, folder_update_schema=update_data, input_data=update_data
+        db_session, user_id=user2.id, folder_update_schema=update_data
     )
     assert updated_folder is None
     assert error == "NOT_FOUND"

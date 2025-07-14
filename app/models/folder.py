@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from typing import Optional
-from typing import List
 import uuid
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, UniqueConstraint
@@ -82,19 +81,6 @@ class Folder(Base):
             (perm.user for perm in self.permissions if perm.role == RoleEnum.owner),
             None,
         )
-
-    @property
-    def path(self) -> List[dict]:
-        """Builds the breadcrumb path from the root to the current folder."""
-        parts = []
-        current = self
-        while current is not None:
-            parts.append({"id": current.id, "name": current.name})
-            current = current.parent
-
-        # The root of the filesystem doesn't exist in the DB, so we add it virtually.
-        root = [{"id": None, "name": "Root"}]
-        return root + list(reversed(parts))
 
     def __repr__(self):
         return f"<Folder(id={self.id}, name='{self.name}', parent_id={self.parent_id})>"
