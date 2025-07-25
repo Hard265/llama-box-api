@@ -56,3 +56,7 @@ class File(Base):
             (perm.user for perm in self.permissions if perm.role == RoleEnum.viewer),
             None,
         )
+
+    @property
+    def is_shared(self) -> bool:
+        return len(self.permissions) > 1

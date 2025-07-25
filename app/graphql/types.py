@@ -1,11 +1,12 @@
 from __future__ import annotations
-from datetime import datetime
 import enum
+from datetime import datetime
 from typing import List, Optional, Tuple
 from uuid import UUID
 
 import strawberry
-
+from strawberry import LazyType
+from app.utils.graphql import FromModelMixin
 
 @strawberry.type
 class UserType:
@@ -20,7 +21,7 @@ class PathItemType:
 
 
 @strawberry.type
-class FolderType:
+class FolderType(FromModelMixin):
     id: UUID
     name: str
     created_at: datetime
@@ -29,13 +30,21 @@ class FolderType:
     files: List[FileType]
     links: List[LinkType]
     permissions: List[FolderPermissionType]
-    parent: Optional["FolderType"]
     owner: UserType
     path: List[Tuple[UUID, str]]
+    is_shared: bool
+
+    # @strawberry.field
+    # def contents(self) -> List[LazyType["ContentsType", __name__]]:
+    #    return [
+    #        FolderType.from_model(f) for f in self.folders
+    #    ] + [
+    #        FileType.from_model(f) for f in self.files
+    #    ]
 
 
 @strawberry.type
-class FileType:
+class FileType(FromModelMixin):
     id: UUID
     name: str
     created_at: datetime
@@ -48,6 +57,10 @@ class FileType:
     ext: str
     permissions: List[FilePermissionType]
     links: List[LinkType]
+    is_shared: bool
+
+
+ContentsType = strawberry.union("ContentsType", types=(FolderType, FileType))
 
 
 @strawberry.type
