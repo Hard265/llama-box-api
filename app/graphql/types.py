@@ -5,7 +5,6 @@ from typing import List, Optional, Tuple
 from uuid import UUID
 
 import strawberry
-from strawberry import LazyType
 from app.utils.graphql import FromModelMixin
 
 @strawberry.type

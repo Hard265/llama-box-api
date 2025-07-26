@@ -20,7 +20,7 @@ def db_engine():
 @pytest.fixture(scope="function")
 def db_session(db_engine):
     connection = db_engine.connect()
-    transaction = connection.begin_nested()
+    connection.begin_nested()
     session = sessionmaker(autocommit=False, autoflush=False, bind=connection)()
 
     def override_get_db():

@@ -1,3 +1,8 @@
+from dataclasses import fields as dataclass_fields
+
+
+
+
 class FromModelMixin:
     @classmethod
     def from_model(cls, model_obj, exclude: set[str] = None, include: dict[str, type] = None):
@@ -9,8 +14,7 @@ class FromModelMixin:
         exclude = exclude or set()
         include = include or {}
 
-        mapper = sa_inspect(model_obj)
-        unloaded = mapper.unloaded
+        
         constructor_fields = {f.name for f in dataclass_fields(cls) if f.init}
         constructor_fields |= set(include.keys())
 
