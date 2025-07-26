@@ -2,10 +2,11 @@ from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.folder import Folder
-from app.models.permission import FolderPermission, RoleEnum
+from app.models.file import File
+from app.models.permission import FolderPermission, FilePermission, RoleEnum
 from app.schemas.folder import FolderCreate
 
 
@@ -16,9 +17,13 @@ def get_folder(db: Session, user_id: UUID, id: UUID):
     query = (
         db.query(Folder)
         .options(
-            joinedload(Folder.files),
-            joinedload(Folder.folders),
-            selectinload(Folder.permissions),
+            selectinload(Folder.files)
+            .selectinload(File.permissions)
+            .selectinload(FilePermission.user),
+            selectinload(Folder.folders)
+            .selectinload(Folder.permissions)
+            .selectinload(FolderPermission.user),
+            selectinload(Folder.permissions).selectinload(FolderPermission.user),
             selectinload(Folder.links),
         )
         .join(FolderPermission)
@@ -39,7 +44,7 @@ def get_folders(db: Session, user_id: UUID, parent_id: Optional[UUID] = None):
         db.query(Folder)
         .options(
             selectinload(Folder.files),
-            selectinload(Folder.folders),
+            selectinload(Folder.folders).selectinload(Folder.permissions),
             selectinload(Folder.permissions),
             selectinload(Folder.links),
         )

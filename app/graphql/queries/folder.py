@@ -34,8 +34,8 @@ class FolderQueries:
                 folders=folder.folders,
                 files=folder.files,
                 links=folder.links,
+                is_shared=folder.is_shared,
                 permissions=folder.permissions,
-                parent=folder.parent,
                 owner=folder.owner,
                 path=get_folder_path_cte(db, id),
             )

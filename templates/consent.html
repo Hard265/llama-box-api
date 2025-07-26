@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Consent</title>
+</head>
+<body>
+    <h1>Consent Required</h1>
+    <p>The application <strong>{{ client_id }}</strong> is requesting access to the following scopes: <strong>{{ scope }}</strong>.</p>
+    <form method="post">
+        <input type="hidden" name="client_id" value="{{ client_id }}">
+        <input type="hidden" name="redirect_uri" value="{{ request.query_params.get('redirect_uri') }}">
+        <input type="hidden" name="scope" value="{{ scope }}">
+        <input type="hidden" name="response_type" value="{{ request.query_params.get('response_type') }}">
+        <input type="hidden" name="nonce" value="{{ request.query_params.get('nonce') }}">
+        <button type="submit" name="choice" value="approve">Approve</button>
+        <button type="submit" name="choice" value="deny">Deny</button>
+    </form>
+</body>
+</html>

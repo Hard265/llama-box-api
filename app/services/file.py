@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import joinedload, Session, selectinload
 from strawberry.file_uploads import Upload
 from app.models.file import File
+from app.models.folder import Folder
 from app.models.permission import FilePermission, FolderPermission, RoleEnum
 
 MEDIA_ROOT = "media"
@@ -144,7 +145,7 @@ def get_user_files(db: Session, user_id: UUID, folder_id: Optional[UUID] = None)
     query = (
         db.query(File)
         .options(
-            selectinload(File.folder),
+            selectinload(File.folder).selectinload(Folder.permissions),
             selectinload(File.permissions),
             selectinload(File.links),
         )
