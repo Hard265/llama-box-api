@@ -1,5 +1,6 @@
 import strawberry
 from strawberry.fastapi import GraphQLRouter
+from strawberry.file_uploads import Upload
 
 from app.core.context import get_context
 from app.graphql.mutations.file import FileMutations

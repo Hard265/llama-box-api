@@ -11,8 +11,65 @@ from app.models.file import File
 from app.models.folder import Folder
 from app.models.permission import FilePermission, FolderPermission, RoleEnum
 
+from app.schemas.file import CreateFile
+
 MEDIA_ROOT = "media"
 os.makedirs(MEDIA_ROOT, exist_ok=True)
+
+
+def create_file(db: Session, user_id: UUID, file_data: CreateFile):
+    try:
+        parent_folder_id = file_data.folder_id
+        if parent_folder_id:
+            folder = db.query(Folder).get(parent_folder_id)
+            if not folder:
+                return None, "NOT_FOUND"
+
+            permission = (
+                db.query(FolderPermission)
+                .filter(
+                    FolderPermission.folder_id == parent_folder_id,
+                    FolderPermission.user_id == user_id,
+                    FolderPermission.role.in_([RoleEnum.owner, RoleEnum.editor]),
+                )
+                .first()
+            )
+            if not permission:
+                return None, "PERMISSION_DENIED"
+
+        file_instance = File(
+            name=file_data.name,
+            file=file_data.file,
+            folder_id=parent_folder_id,
+            mime_type=file_data.mime_type,
+            size=file_data.size,
+            ext=file_data.ext,
+        )
+        db.add(file_instance)
+        db.flush()
+
+        permission = FilePermission(
+            user_id=user_id, file_id=file_instance.id, role=RoleEnum.owner
+        )
+        db.add(permission)
+        db.commit()
+
+        file_instance = (
+            db.query(File)
+            .options(joinedload(File.folder))
+            .filter(File.id == file_instance.id)
+            .first()
+        )
+        if not file_instance:
+            return None, "INTERNAL_ERROR"
+
+        return file_instance, None
+    except IntegrityError:
+        db.rollback()
+        return None, "FILE_EXISTS"
+    except SQLAlchemyError:
+        db.rollback()
+        return None, "INTERNAL_ERROR"
 
 
 async def save_uploaded_file(file: Upload) -> tuple[str, str, str, int]:
@@ -28,61 +85,7 @@ async def save_uploaded_file(file: Upload) -> tuple[str, str, str, int]:
     return file_path, mime_type, extension, file.size
 
 
-async def create_file(
-    db: Session, user_id: UUID, file: Upload, folder_id: Optional[str] = None
-):
-    parent_folder_id = None
-    if folder_id:
-        try:
-            parent_folder_id = UUID(folder_id)
-        except ValueError:
-            return None, "INVALID_INPUT"
-        permission = (
-            db.query(FolderPermission)
-            .filter(
-                FolderPermission.folder_id == parent_folder_id,
-                FolderPermission.user_id == user_id,
-                FolderPermission.role.in_([RoleEnum.owner, RoleEnum.editor]),
-            )
-            .first()
-        )
-        if not permission:
-            return None, "PERMISSION_DENIED"
-    try:
-        file_path, mime_type, extension, size = await save_uploaded_file(file)
-    except Exception:
-        return None, "FAILED_SAVE"
-    try:
-        file_instance = File(
-            name=file.filename,
-            file=file_path,
-            folder_id=parent_folder_id,
-            mime_type=mime_type,
-            size=size,
-            ext=extension,
-        )
-        db.add(file_instance)
-        db.flush()
-        permission = FilePermission(
-            user_id=user_id, file_id=file_instance.id, role=RoleEnum.owner
-        )
-        db.add(permission)
-        db.commit()
-        file_instance = (
-            db.query(File)
-            .options(joinedload(File.folder))
-            .filter(File.id == file_instance.id)
-            .first()
-        )
-        if not file_instance:
-            return None, "INTERNAL_ERROR"
-        return file_instance, None
-    except IntegrityError:
-        db.rollback()
-        return None, "FILE_EXISTS"
-    except SQLAlchemyError:
-        db.rollback()
-        return None, "INTERNAL_ERROR"
+
 
 
 def delete_file(db: Session, user_id: UUID, file_id: UUID):
@@ -123,7 +126,7 @@ def get_user_file(db: Session, user_id: UUID, id: UUID):
         db.query(File)
         .options(
             joinedload(File.folder),
-            selectinload(File.permissions),
+            selectinload(File.permissions).selectinload(FilePermission.user),
             selectinload(File.links),
         )
         .join(FilePermission)
@@ -146,7 +149,7 @@ def get_user_files(db: Session, user_id: UUID, folder_id: Optional[UUID] = None)
         db.query(File)
         .options(
             selectinload(File.folder).selectinload(Folder.permissions),
-            selectinload(File.permissions),
+            selectinload(File.permissions).selectinload(FilePermission.user),
             selectinload(File.links),
         )
         .join(FilePermission)

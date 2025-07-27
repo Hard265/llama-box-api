@@ -10,10 +10,11 @@ from app.graphql.types import (
     FileMoveInput,
     FileUpdateInput,
     FileCopyResponse,
+    FileInput,
 )
 from pydantic import ValidationError
-from app.schemas.file import UpdateFile
-from app.services.file import get_user_file, update_file
+from app.schemas.file import UpdateFile, CreateFile
+from app.services.file import create_file, get_user_file, update_file, save_uploaded_file
 from app.services.folder import get_folder
 from app.services.copy import CopyService
 from app.services.move import move_files
@@ -21,6 +22,47 @@ from app.services.move import move_files
 
 @strawberry.type
 class FileMutations:
+    @strawberry.mutation
+    async def create(self, info: strawberry.Info, input: FileInput) -> FileType:
+        user = info.context.get("user")
+        db = next(get_db())
+        try:
+            file_path, mime_type, extension, size = await save_uploaded_file(input.file)
+            data = CreateFile(
+                name=input.name,
+                folder_id=input.folder_id,
+                file=file_path,
+                mime_type=mime_type,
+                ext=extension,
+                size=size,
+            )
+        except ValidationError as exc:
+            raise StrawberryGraphQLError(
+                "Invalid input data for file creation",
+                extensions={"code": "INVALID_INPUT"},
+            ) from exc
+        except Exception as exc:
+            raise StrawberryGraphQLError(
+                f"Failed to save uploaded file: {exc}",
+                extensions={"code": "FILE_UPLOAD_ERROR"},
+            ) from exc
+
+        try:
+            file, error = create_file(db, UUID(user.sub), data)
+            if error:
+                raise StrawberryGraphQLError(
+                    message="Could not create file", extensions={"code": error}
+                )
+            return file
+        except SQLAlchemyError:
+            db.rollback()
+            raise StrawberryGraphQLError(
+                "Database error occurred while creating file",
+                extensions={"code": "INTERNAL_ERROR"},
+            )
+        finally:
+            db.close()
+
     @strawberry.mutation
     def update(
         self, info: strawberry.Info, id: UUID, input: FileUpdateInput

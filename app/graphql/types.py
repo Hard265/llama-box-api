@@ -5,6 +5,8 @@ from typing import List, Optional, Tuple
 from uuid import UUID
 
 import strawberry
+from strawberry.file_uploads import Upload
+
 from app.utils.graphql import FromModelMixin
 
 @strawberry.type
@@ -86,8 +88,8 @@ class Role(str, enum.Enum):
 @strawberry.type
 class FilePermissionType:
     id: UUID
-    user_id: str
-    file: FileType
+    user_id: UUID
+    file_id: UUID
     role: Role
     user: UserType
 
@@ -95,8 +97,8 @@ class FilePermissionType:
 @strawberry.type
 class FolderPermissionType:
     id: UUID
-    user_id: str
-    folder: FolderType
+    user_id: UUID
+    folder_id: UUID
     role: Role
     user: UserType
 
@@ -136,6 +138,13 @@ class DeleteResponse:
 class FileUpdateInput:
     name: Optional[str] = None
     starred: Optional[bool] = None
+
+
+@strawberry.input
+class FileInput:
+    name: str
+    folder_id: Optional[UUID] = None
+    file: Upload
 
 
 @strawberry.input
