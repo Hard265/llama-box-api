@@ -3,9 +3,11 @@ from app.main import app
 
 client = TestClient(app)
 
+
 def test_user_registration(test_user):
     assert test_user.email.startswith("test_")
     assert test_user.email.endswith("@example.com")
+
 
 def test_user_login(test_user):
     response = client.post(

@@ -84,7 +84,7 @@ class Folder(Base):
 
     @property
     def is_shared(self) -> bool:
-        return len(self.permissions) > 1
+        return len(self.permissions) > 1 or len(self.links) > 0
 
     def __repr__(self):
         return f"<Folder(id={self.id}, name='{self.name}', parent_id={self.parent_id})>"

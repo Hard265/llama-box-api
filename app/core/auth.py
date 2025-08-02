@@ -22,7 +22,9 @@ load_dotenv()
 ACCESS_SECRET_KEY = os.getenv("ACCESS_SECRET_KEY")
 REFRESH_SECRET_KEY = os.getenv("REFRESH_SECRET_KEY")
 if ACCESS_SECRET_KEY is None or REFRESH_SECRET_KEY is None:
-    raise RuntimeError("ACCESS_SECRET_KEY or REFRESH_SECRET_KEY is missing from environment variables")
+    raise RuntimeError(
+        "ACCESS_SECRET_KEY or REFRESH_SECRET_KEY is missing from environment variables"
+    )
 
 # Algorithm validation
 ALLOWED_ALGORITHMS = {"HS256", "HS384", "HS512"}
@@ -45,9 +47,11 @@ def verify_hash(secret: str, hash: str) -> bool:
     """Verify a secret against its hash."""
     return pwd_context.verify(secret, hash)
 
+
 def get_hash(secret: str) -> str:
     """Generate a hash for a secret."""
     return pwd_context.hash(secret)
+
 
 def create_access_token(data: Dict[str, Any]) -> str:
     """Create an access token with a 'type' claim."""
@@ -57,6 +61,7 @@ def create_access_token(data: Dict[str, Any]) -> str:
     encoded_jwt = jwt.encode(to_encode, ACCESS_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 def create_refresh_token(data: Dict[str, Any]) -> str:
     """Create a refresh token with a 'type' claim."""
     to_encode = data.copy()
@@ -64,6 +69,7 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
     to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 def decode_refresh_token(token: str) -> TokenData:
     """Decode and validate a refresh token."""
@@ -85,6 +91,7 @@ def decode_refresh_token(token: str) -> TokenData:
             detail="Invalid refresh token",
         )
 
+
 def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenData:
     """Validate an access token and return user data."""
     credential_exception = HTTPException(
@@ -104,8 +111,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenData:
         logger.error(f"Access token decode error: {str(e)}")
         raise credential_exception
 
+
 def get_current_user_from_request(request: Request) -> Optional[TokenData]:
     """Extract and validate an access token from a request header (optional auth)."""
+
+    if not request:
+        return None
+
     auth_header = request.headers.get("Authorization")
     if not auth_header:
         return None
@@ -125,4 +137,3 @@ def get_current_user_from_request(request: Request) -> Optional[TokenData]:
     except JWTError:
         logger.debug("Optional token decode error")
         return None
-

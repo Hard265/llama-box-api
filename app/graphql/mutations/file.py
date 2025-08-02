@@ -14,7 +14,12 @@ from app.graphql.types import (
 )
 from pydantic import ValidationError
 from app.schemas.file import UpdateFile, CreateFile
-from app.services.file import create_file, get_user_file, update_file, save_uploaded_file
+from app.services.file import (
+    create_file,
+    get_user_file,
+    update_file,
+    save_uploaded_file,
+)
 from app.services.folder import get_folder
 from app.services.copy import CopyService
 from app.services.move import move_files
@@ -77,7 +82,9 @@ class FileMutations:
             ) from exc
         db = next(get_db())
         try:
-            file, error = update_file(db, UUID(user.sub), id, name=data.name, starred=data.starred)
+            file, error = update_file(
+                db, UUID(user.sub), id, name=data.name, starred=data.starred
+            )
             if error:
                 raise StrawberryGraphQLError(
                     message="Could not update file", extensions={"code": error}
@@ -98,7 +105,9 @@ class FileMutations:
         db = next(get_db())
         try:
             copied_files = []
-            destination_folder = get_folder(db, UUID(user.sub), input.destination_folder_id)
+            destination_folder = get_folder(
+                db, UUID(user.sub), input.destination_folder_id
+            )
             if not destination_folder:
                 raise StrawberryGraphQLError(
                     "Destination folder not found", extensions={"code": "NOT_FOUND"}
@@ -124,7 +133,9 @@ class FileMutations:
             return FileCopyResponse(files=copied_files)
         except PermissionError as e:
             db.rollback()
-            raise StrawberryGraphQLError(str(e), extensions={"code": "PERMISSION_DENIED"})
+            raise StrawberryGraphQLError(
+                str(e), extensions={"code": "PERMISSION_DENIED"}
+            )
         except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
@@ -149,7 +160,9 @@ class FileMutations:
                     )
                 source_files.append(source_file)
 
-            destination_folder = get_folder(db, UUID(user.sub), input.destination_folder_id)
+            destination_folder = get_folder(
+                db, UUID(user.sub), input.destination_folder_id
+            )
             if not destination_folder:
                 raise StrawberryGraphQLError(
                     "Destination folder not found", extensions={"code": "NOT_FOUND"}
@@ -165,7 +178,9 @@ class FileMutations:
             return FileCopyResponse(files=moved_files)
         except (PermissionError, ValueError) as e:
             db.rollback()
-            raise StrawberryGraphQLError(str(e), extensions={"code": "PERMISSION_DENIED"})
+            raise StrawberryGraphQLError(
+                str(e), extensions={"code": "PERMISSION_DENIED"}
+            )
         except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(

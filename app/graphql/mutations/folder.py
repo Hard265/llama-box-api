@@ -141,7 +141,9 @@ class FolderMutations:
             return FolderCopyResponse(folders=copied_folders)
         except PermissionError as e:
             db.rollback()
-            raise StrawberryGraphQLError(str(e), extensions={"code": "PERMISSION_DENIED"})
+            raise StrawberryGraphQLError(
+                str(e), extensions={"code": "PERMISSION_DENIED"}
+            )
         except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(
@@ -153,8 +155,7 @@ class FolderMutations:
 
     @strawberry.mutation
     def move(self, info: strawberry.Info, input: FolderMoveInput) -> FolderCopyResponse:
-        user = info.context.get(
-            "user")
+        user = info.context.get("user")
         db = next(get_db())
         try:
             source_folders = []
@@ -167,7 +168,9 @@ class FolderMutations:
                     )
                 source_folders.append(source_folder)
 
-            destination_folder = get_folder(db, UUID(user.sub), input.destination_folder_id)
+            destination_folder = get_folder(
+                db, UUID(user.sub), input.destination_folder_id
+            )
             if not destination_folder:
                 raise StrawberryGraphQLError(
                     "Destination folder not found", extensions={"code": "NOT_FOUND"}
@@ -183,7 +186,9 @@ class FolderMutations:
             return FolderCopyResponse(folders=moved_folders)
         except (PermissionError, ValueError) as e:
             db.rollback()
-            raise StrawberryGraphQLError(str(e), extensions={"code": "PERMISSION_DENIED"})
+            raise StrawberryGraphQLError(
+                str(e), extensions={"code": "PERMISSION_DENIED"}
+            )
         except SQLAlchemyError:
             db.rollback()
             raise StrawberryGraphQLError(

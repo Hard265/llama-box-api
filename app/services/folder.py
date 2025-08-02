@@ -20,9 +20,11 @@ def get_folder(db: Session, user_id: UUID, id: UUID):
             selectinload(Folder.files)
             .selectinload(File.permissions)
             .selectinload(FilePermission.user),
+            selectinload(Folder.files).selectinload(File.links),
             selectinload(Folder.folders)
             .selectinload(Folder.permissions)
             .selectinload(FolderPermission.user),
+            selectinload(Folder.folders).selectinload(Folder.links),
             selectinload(Folder.permissions).selectinload(FolderPermission.user),
             selectinload(Folder.links),
         )
@@ -45,7 +47,7 @@ def get_folders(db: Session, user_id: UUID, parent_id: Optional[UUID] = None):
         .options(
             selectinload(Folder.files),
             selectinload(Folder.folders).selectinload(Folder.permissions),
-            selectinload(Folder.permissions),
+            selectinload(Folder.permissions).selectinload(FolderPermission.user),
             selectinload(Folder.links),
         )
         .join(FolderPermission)
@@ -85,8 +87,24 @@ def create_folder(db: Session, folder_data: FolderCreate, user_id: UUID):
         db.commit()
         db.refresh(folder)
         db.refresh(permission)
-        _ = folder.files
-        _ = folder.folders
+
+        folder = (
+            db.query(Folder)
+            .options(
+                selectinload(Folder.files)
+                .selectinload(File.permissions)
+                .selectinload(FilePermission.user),
+                selectinload(Folder.folders)
+                .selectinload(Folder.permissions)
+                .selectinload(FolderPermission.user),
+                selectinload(Folder.permissions).selectinload(FolderPermission.user),
+                selectinload(Folder.links),
+            )
+            .join(FolderPermission)
+            .filter(Folder.id == folder.id)
+            .first()
+        )
+
         return folder, None
     except IntegrityError:
         db.rollback()

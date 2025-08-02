@@ -26,17 +26,20 @@ async def read_share(
             detail="Share not found",
         )
 
-    if link.expires_at and link.expires_at < datetime.now(timezone.utc):
+    if link.expires_at and link.expires_at.replace(tzinfo=timezone.utc) < datetime.now(
+        timezone.utc
+    ):
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
             detail="Share has expired",
         )
 
-    if link.password and not link.check_password(password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Valid password required to access this share",
-        )
+    if link.password:
+        if not password or not link.check_password(password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Valid password required to access this share",
+            )
 
     target = link.file or link.folder
     if not target:

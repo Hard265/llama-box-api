@@ -1,4 +1,3 @@
-
 import uuid
 
 import pytest
@@ -124,9 +123,7 @@ def test_get_subfolders(db_session: Session, setup_users):
 def test_update_folder(db_session: Session, setup_users):
     user1, _ = setup_users
     folder_data = FolderCreate(name="original_name")
-    folder, _ = folder_service.create_folder(
-        db_session, folder_data, user_id=user1.id
-    )
+    folder, _ = folder_service.create_folder(db_session, folder_data, user_id=user1.id)
 
     update_data = FolderUpdate(id=folder.id, name="updated_name")
     updated_folder, error = folder_service.update_folder(
@@ -140,9 +137,7 @@ def test_update_folder(db_session: Session, setup_users):
 def test_update_folder_no_permission(db_session: Session, setup_users):
     user1, user2 = setup_users
     folder_data = FolderCreate(name="original_name")
-    folder, _ = folder_service.create_folder(
-        db_session, folder_data, user_id=user1.id
-    )
+    folder, _ = folder_service.create_folder(db_session, folder_data, user_id=user1.id)
 
     update_data = FolderUpdate(id=folder.id, name="updated_name")
     updated_folder, error = folder_service.update_folder(
@@ -155,9 +150,7 @@ def test_update_folder_no_permission(db_session: Session, setup_users):
 def test_delete_folder(db_session: Session, setup_users):
     user1, _ = setup_users
     folder_data = FolderCreate(name="to_be_deleted")
-    folder, _ = folder_service.create_folder(
-        db_session, folder_data, user_id=user1.id
-    )
+    folder, _ = folder_service.create_folder(db_session, folder_data, user_id=user1.id)
 
     success, error = folder_service.delete_folder(
         db_session, user_id=user1.id, folder_id=folder.id
@@ -170,9 +163,7 @@ def test_delete_folder(db_session: Session, setup_users):
 def test_delete_folder_no_permission(db_session: Session, setup_users):
     user1, user2 = setup_users
     folder_data = FolderCreate(name="test_folder")
-    folder, _ = folder_service.create_folder(
-        db_session, folder_data, user_id=user1.id
-    )
+    folder, _ = folder_service.create_folder(db_session, folder_data, user_id=user1.id)
 
     success, error = folder_service.delete_folder(
         db_session, user_id=user2.id, folder_id=folder.id

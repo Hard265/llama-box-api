@@ -1,7 +1,7 @@
-
 import pytest
 from sqlalchemy.exc import IntegrityError
 from app.models.user import User
+
 
 def test_create_user(db_session):
     user = User(email="test@example.com", password="password")
@@ -14,6 +14,7 @@ def test_create_user(db_session):
     assert user.password == "password"
     assert user.is_active is True
 
+
 def test_duplicate_email(db_session):
     user1 = User(email="test@example.com", password="password")
     db_session.add(user1)
@@ -23,6 +24,7 @@ def test_duplicate_email(db_session):
     db_session.add(user2)
     with pytest.raises(IntegrityError):
         db_session.commit()
+
 
 def test_is_active_defaults_to_true(db_session):
     user = User(email="test@example.com", password="password")

@@ -40,6 +40,7 @@ def get_user_by_sub(sub: Optional[str], db: Session):
         )
     return user
 
+
 def get_user_by_email(email: str, db: Session):
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -48,6 +49,7 @@ def get_user_by_email(email: str, db: Session):
             detail="User not found",
         )
     return user
+
 
 def change_password(sub: Optional[str], data: UserPasswordChange, db: Session):
     user = get_user_by_sub(sub, db)

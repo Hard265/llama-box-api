@@ -1,11 +1,11 @@
 from dataclasses import fields as dataclass_fields
 
 
-
-
 class FromModelMixin:
     @classmethod
-    def from_model(cls, model_obj, exclude: set[str] = None, include: dict[str, type] = None):
+    def from_model(
+        cls, model_obj, exclude: set[str] = None, include: dict[str, type] = None
+    ):
         """
         Convert model to GraphQL type, safely avoiding unloaded fields.
         :param exclude: fields to exclude
@@ -14,7 +14,6 @@ class FromModelMixin:
         exclude = exclude or set()
         include = include or {}
 
-        
         constructor_fields = {f.name for f in dataclass_fields(cls) if f.init}
         constructor_fields |= set(include.keys())
 

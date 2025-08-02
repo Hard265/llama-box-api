@@ -1,8 +1,8 @@
-
 from app.models.permission import FilePermission, FolderPermission, RoleEnum
 from app.models.file import File
 from app.models.folder import Folder
 from app.models.user import User
+
 
 def test_create_file_permission(db_session):
     user = User(email="test@example.com", password="password")
@@ -15,7 +15,14 @@ def test_create_file_permission(db_session):
     db_session.commit()
     db_session.refresh(folder)
 
-    file = File(name="test_file", folder_id=folder.id, file="/path/to/file", mime_type="text/plain", ext=".txt", size=123)
+    file = File(
+        name="test_file",
+        folder_id=folder.id,
+        file="/path/to/file",
+        mime_type="text/plain",
+        ext=".txt",
+        size=123,
+    )
     db_session.add(file)
     db_session.commit()
     db_session.refresh(file)
@@ -30,6 +37,7 @@ def test_create_file_permission(db_session):
     assert permission.file_id == file.id
     assert permission.role == RoleEnum.viewer
 
+
 def test_create_folder_permission(db_session):
     user = User(email="test@example.com", password="password")
     db_session.add(user)
@@ -41,7 +49,9 @@ def test_create_folder_permission(db_session):
     db_session.commit()
     db_session.refresh(folder)
 
-    permission = FolderPermission(user_id=user.id, folder_id=folder.id, role=RoleEnum.viewer)
+    permission = FolderPermission(
+        user_id=user.id, folder_id=folder.id, role=RoleEnum.viewer
+    )
     db_session.add(permission)
     db_session.commit()
     db_session.refresh(permission)

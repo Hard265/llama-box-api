@@ -9,6 +9,7 @@ from strawberry.file_uploads import Upload
 
 from app.utils.graphql import FromModelMixin
 
+
 @strawberry.type
 class UserType:
     id: UUID
@@ -74,8 +75,6 @@ class LinkType:
     is_public: bool
     created_at: datetime
     expires_at: Optional[datetime]
-    folder: Optional[FolderType]
-    file: Optional[FileType]
 
 
 @strawberry.enum

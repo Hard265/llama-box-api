@@ -1,4 +1,3 @@
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -10,12 +9,14 @@ import os
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 
+
 @pytest.fixture(scope="session")
 def db_engine():
     engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
     Base.metadata.create_all(bind=engine)
     yield engine
     os.remove("./test.db")
+
 
 @pytest.fixture(scope="function")
 def db_session(db_engine):
@@ -40,14 +41,10 @@ def test_user(db_session):
     from app.schemas.user import UserCreate
     import uuid
 
-    user_data = UserCreate(email=f"test_{uuid.uuid4()}@example.com", password="password")
+    user_data = UserCreate(
+        email=f"test_{uuid.uuid4()}@example.com", password="password"
+    )
     user = create_user(user_data, db_session)
     db_session.commit()
     db_session.refresh(user)
     return user
-
-
-
-
-
-

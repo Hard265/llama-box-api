@@ -1,6 +1,6 @@
-
 from app.models.folder import Folder
 from app.models.user import User
+
 
 def test_create_folder(db_session):
     user = User(email="test@example.com", password="password")

@@ -562,4 +562,4 @@ def test_get_all_file_permissions(db_session: Session, setup_users, setup_folder
     )
     assert error_user2 is None
     assert len(permissions_user2) == 2  # Viewer of file1, Editor of file2
-    """
+"""

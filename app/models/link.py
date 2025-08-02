@@ -63,4 +63,4 @@ class Link(Base):
 
     @property
     def is_public(self):
-        return True if not self.shared_with_sub else False
+        return self.password is None

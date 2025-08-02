@@ -1,12 +1,17 @@
+from typing import AsyncGenerator
 import strawberry
+import asyncio
 from strawberry.fastapi import GraphQLRouter
-from strawberry.file_uploads import Upload
+
 
 from app.core.context import get_context
 from app.graphql.mutations.file import FileMutations
 from app.graphql.mutations.folder import FolderMutations
 from app.graphql.mutations.link import LinkMutations
-from app.graphql.mutations.permission import FilePermissionMutations, FolderPermissionMutations
+from app.graphql.mutations.permission import (
+    FilePermissionMutations,
+    FolderPermissionMutations,
+)
 from app.graphql.queries.file import FileQueries
 from app.graphql.queries.folder import FolderQueries
 from app.graphql.queries.link import LinkQueries
@@ -63,9 +68,21 @@ class Mutation:
         return FolderPermissionMutations()
 
 
+@strawberry.type
+class Subscription:
+    @strawberry.subscription
+    async def name(
+        self, info: strawberry.Info, target: int = 100
+    ) -> AsyncGenerator[int, None]:
+        for i in range(target):
+            yield i
+            await asyncio.sleep(1)
+
+
 schema = strawberry.Schema(
     query=Query,
     mutation=Mutation,
+    subscription=Subscription,
 )
 graphql_app = GraphQLRouter(
     schema, multipart_uploads_enabled=True, context_getter=get_context

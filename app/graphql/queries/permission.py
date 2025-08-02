@@ -37,7 +37,6 @@ class FilePermissionQueries:
     def get_by_file(
         self, info: strawberry.Info, file_id: UUID
     ) -> Sequence[FilePermissionType]:
-
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
@@ -81,7 +80,6 @@ class FilePermissionQueries:
 class FolderPermissionQueries:
     @strawberry.field
     def get(self, info: strawberry.Info, id: UUID) -> Optional[FolderPermissionType]:
-
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
@@ -98,7 +96,6 @@ class FolderPermissionQueries:
     def get_by_folder(
         self, info: strawberry.Info, folder_id: UUID
     ) -> Sequence[FolderPermissionType]:
-
         user = info.context.get("user")
         db: Session = next(get_db())
         try:
