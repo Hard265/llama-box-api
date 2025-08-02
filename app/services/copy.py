@@ -22,14 +22,14 @@ class CopyService:
     ) -> Folder:
         """
         Copy a folder with advanced options.
-        
+
         Args:
             source_folder: The folder to copy
             destination_parent: Parent folder for the copy
             new_name: Name for the copied folder
             user: User performing the copy (for permission checks)
             options: Additional copy options
-            
+
         Returns:
             The newly created folder copy
         """
@@ -40,7 +40,11 @@ class CopyService:
             raise PermissionError("User does not have permission to copy this folder")
 
         # Check destination permissions
-        if destination_parent and user and not self._can_create_in_folder(destination_parent, user):
+        if (
+            destination_parent
+            and user
+            and not self._can_create_in_folder(destination_parent, user)
+        ):
             raise PermissionError(
                 "User does not have permission to create in destination folder"
             )
@@ -142,14 +146,14 @@ class CopyService:
     ) -> File:
         """
         Copy a file with advanced options.
-        
+
         Args:
             source_file: The file to copy
             destination_folder: Folder for the copy
             new_name: Name for the copied file
             user: User performing the copy (for permission checks)
             options: Additional copy options
-            
+
         Returns:
             The newly created file copy
         """

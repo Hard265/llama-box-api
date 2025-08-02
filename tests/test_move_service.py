@@ -63,7 +63,10 @@ def test_move_folder_into_subfolder(db_session: Session, setup_users, setup_fold
 
     with pytest.raises(ValueError):
         move_folders(
-            db_session, source_folders=[folder1], destination_folder=subfolder, user=user1
+            db_session,
+            source_folders=[folder1],
+            destination_folder=subfolder,
+            user=user1,
         )
 
 
@@ -92,8 +95,12 @@ def test_move_multiple_files(db_session: Session, setup_users, setup_folders):
     db_session.refresh(file1)
     db_session.refresh(file2)
 
-    permission1 = FilePermission(file_id=file1.id, user_id=user1.id, role=RoleEnum.owner)
-    permission2 = FilePermission(file_id=file2.id, user_id=user1.id, role=RoleEnum.owner)
+    permission1 = FilePermission(
+        file_id=file1.id, user_id=user1.id, role=RoleEnum.owner
+    )
+    permission2 = FilePermission(
+        file_id=file2.id, user_id=user1.id, role=RoleEnum.owner
+    )
     db_session.add_all([permission1, permission2])
     db_session.commit()
 
@@ -122,7 +129,10 @@ def test_move_multiple_folders(db_session: Session, setup_users, setup_folders):
     db_session.commit()
 
     moved_folders = move_folders(
-        db_session, source_folders=[folder1, folder3], destination_folder=folder2, user=user1
+        db_session,
+        source_folders=[folder1, folder3],
+        destination_folder=folder2,
+        user=user1,
     )
 
     assert len(moved_folders) == 2

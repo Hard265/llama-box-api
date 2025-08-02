@@ -7,6 +7,8 @@ import magic
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import joinedload, Session, selectinload
 from strawberry.file_uploads import Upload
+from PIL import Image
+import io
 from app.models.file import File
 from app.models.folder import Folder
 from app.models.permission import FilePermission, FolderPermission, RoleEnum
@@ -56,7 +58,11 @@ def create_file(db: Session, user_id: UUID, file_data: CreateFile):
 
         file_instance = (
             db.query(File)
-            .options(joinedload(File.folder))
+            .options(
+                joinedload(File.folder),
+                selectinload(File.permissions).selectinload(FilePermission.user),
+                selectinload(File.links),
+            )
             .filter(File.id == file_instance.id)
             .first()
         )
@@ -83,9 +89,6 @@ async def save_uploaded_file(file: Upload) -> tuple[str, str, str, int]:
         mime_type = magic.from_buffer(sample, mime=True)
     extension = Path(file.filename).suffix.lower().lstrip(".")
     return file_path, mime_type, extension, file.size
-
-
-
 
 
 def delete_file(db: Session, user_id: UUID, file_id: UUID):
@@ -136,6 +139,18 @@ def get_user_file(db: Session, user_id: UUID, id: UUID):
     if not query:
         return None, "NOT_FOUND"
     return query, None
+
+
+def generate_thumbnail(file_path: str, size: tuple[int, int] = (128, 128)):
+    try:
+        img = Image.open(file_path)
+        img.thumbnail(size)
+        thumb_io = io.BytesIO()
+        img.save(thumb_io, format="PNG")
+        thumb_io.seek(0)
+        return thumb_io, None
+    except Exception as e:
+        return None, str(e)
 
 
 def get_user_files(db: Session, user_id: UUID, folder_id: Optional[UUID] = None):

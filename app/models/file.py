@@ -59,4 +59,4 @@ class File(Base):
 
     @property
     def is_shared(self) -> bool:
-        return len(self.permissions) > 1
+        return len(self.permissions) > 1 or len(self.links) > 0

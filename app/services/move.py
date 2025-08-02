@@ -15,7 +15,12 @@ def _is_subfolder(source_folder: Folder, destination_folder: Folder) -> bool:
     return False
 
 
-def move_folders(session: Session, source_folders: List[Folder], destination_folder: Folder, user: User) -> List[Folder]:
+def move_folders(
+    session: Session,
+    source_folders: List[Folder],
+    destination_folder: Folder,
+    user: User,
+) -> List[Folder]:
     """Move a list of folders to a new destination."""
     moved_folders = []
     for folder in source_folders:
@@ -26,7 +31,9 @@ def move_folders(session: Session, source_folders: List[Folder], destination_fol
     return moved_folders
 
 
-def move_files(session: Session, source_files: List[File], destination_folder: Folder, user: User) -> List[File]:
+def move_files(
+    session: Session, source_files: List[File], destination_folder: Folder, user: User
+) -> List[File]:
     """Move a list of files to a new destination."""
     moved_files = []
     for file in source_files:

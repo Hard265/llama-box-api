@@ -147,8 +147,12 @@ def test_copy_multiple_files(db_session: Session, setup_users, setup_folders):
     db_session.refresh(file1)
     db_session.refresh(file2)
 
-    permission1 = FilePermission(file_id=file1.id, user_id=user1.id, role=RoleEnum.owner)
-    permission2 = FilePermission(file_id=file2.id, user_id=user1.id, role=RoleEnum.owner)
+    permission1 = FilePermission(
+        file_id=file1.id, user_id=user1.id, role=RoleEnum.owner
+    )
+    permission2 = FilePermission(
+        file_id=file2.id, user_id=user1.id, role=RoleEnum.owner
+    )
     db_session.add_all([permission1, permission2])
     db_session.commit()
 

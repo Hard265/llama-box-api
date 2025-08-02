@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import Optional
 from datetime import datetime
 
+
 class CreateFile(BaseModel):
     name: Optional[str]
     folder_id: Optional[UUID] = None
@@ -10,11 +11,11 @@ class CreateFile(BaseModel):
     mime_type: str
     ext: str
     size: int
-    
-class UpdateFile(BaseModel):
-    name: str  
 
-from datetime import datetime
+
+class UpdateFile(BaseModel):
+    name: str
+
 
 class FileOut(BaseModel):
     id: UUID
@@ -29,5 +30,6 @@ class FileOut(BaseModel):
     updated_at: Optional[datetime]
 
     model_config = ConfigDict(from_attributes=True)
+
 
 FileOut.model_rebuild()
